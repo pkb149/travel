@@ -21,13 +21,20 @@ export default function Home() {
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
-    // Clear ?auth=success param after successful login
-    if (typeof window !== "undefined" && window.location.search.includes("auth=success")) {
+    if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.searchParams.delete("auth");
-      window.history.replaceState({}, "", url.toString());
+      const token = url.searchParams.get("token");
+      if (token) {
+        localStorage.setItem("travel_token", token);
+        url.searchParams.delete("token");
+        url.searchParams.delete("auth");
+        window.history.replaceState({}, "", url.toString());
+      }
     }
-    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include" })
+    const token = typeof window !== "undefined" ? localStorage.getItem("travel_token") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include", headers })
       .then((r) => r.json())
       .then((d) => setAuthed(!!d?.authenticated))
       .catch(() => setAuthed(false));

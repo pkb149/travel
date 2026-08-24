@@ -20,7 +20,10 @@ export default function Sidebar() {
   const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
 
   useEffect(() => {
-    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include" })
+    const token = typeof window !== "undefined" ? localStorage.getItem("travel_token") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include", headers })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.authenticated) setUser({ email: d.email, name: d.name });

@@ -28,13 +28,11 @@ app.use("*", cors({
   credentials: true,
 }));
 
-// --- Google Auth (whitelist only prashantkumarbharadwaj@gmail.com) ---
 app.get("/auth/login", (c) => {
   const clientId = c.env.GOOGLE_CLIENT_ID;
   if (!clientId) return c.text("GOOGLE_CLIENT_ID not set", 500);
   const redirectUri = `https://travel-api.prashantkumarbharadwaj.workers.dev/auth/callback`;
   const state = crypto.randomUUID();
-  // store state in cookie for CSRF
   setCookie(c, "oauth_state", state, { httpOnly: true, secure: true, sameSite: "Lax", path: "/", maxAge: 600 });
   const params = new URLSearchParams({
     client_id: clientId,
@@ -58,7 +56,6 @@ app.get("/auth/callback", async (c) => {
   const clientSecret = c.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = `https://travel-api.prashantkumarbharadwaj.workers.dev/auth/callback`;
 
-  // Exchange code for tokens
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -76,21 +73,20 @@ app.get("/auth/callback", async (c) => {
   }
   const tokens = await tokenRes.json() as { id_token: string; access_token: string };
 
-  // Verify id_token
   const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${tokens.id_token}`);
   if (!verifyRes.ok) return c.text("Failed to verify id_token", 401);
-  const info = await verifyRes.json() as { email: string; email_verified: string; aud: string };
+  const info = await verifyRes.json() as { email: string; email_verified: string; aud: string; name: string };
   if (info.aud !== clientId) return c.text("Invalid audience", 401);
   if (info.email !== ALLOWED_EMAIL) {
     return c.text(`Access denied: only ${ALLOWED_EMAIL} is whitelisted. Your email: ${info.email}`, 403);
   }
-  if (info.email_verified !== "true" && info.email_verified !== true as any) return c.text("Email not verified", 403);
+  if (info.email_verified !== "true" && (info.email_verified as any) !== true) return c.text("Email not verified", 403);
 
-  // Create JWT session
   const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
   const payload = { email: info.email, name: (info as any).name || info.email.split("@")[0], exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 };
   const jwt = await sign(payload, jwtSecret);
 
+  // Set cookie for same-site and also pass token via URL for cross-site (pages.dev vs workers.dev are cross-site, SameSite=None still blocked as third-party in modern browsers)
   setCookie(c, "session", jwt, {
     httpOnly: true,
     secure: true,
@@ -101,11 +97,16 @@ app.get("/auth/callback", async (c) => {
   deleteCookie(c, "oauth_state", { path: "/", secure: true, sameSite: "Lax" });
 
   const frontend = c.env.FRONTEND_URL || "https://travel-7l1.pages.dev";
-  return c.redirect(`${frontend}?auth=success`, 302);
+  // Pass token in URL so frontend can store in localStorage (cross-site cookie is third-party and blocked)
+  return c.redirect(`${frontend}?token=${encodeURIComponent(jwt)}&auth=success`, 302);
 });
 
+function getToken(c: any): string | undefined {
+  return getCookie(c, "session") || c.req.header("Authorization")?.replace("Bearer ", "") || c.req.query("token");
+}
+
 app.get("/auth/me", async (c) => {
-  const token = getCookie(c, "session") || c.req.header("Authorization")?.replace("Bearer ", "");
+  const token = getToken(c);
   if (!token) return c.json({ authenticated: false }, 401);
   try {
     const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
@@ -128,14 +129,11 @@ app.get("/auth/logout", (c) => {
   return c.redirect(frontend, 302);
 });
 
-// --- API protection: shared secret + JWT ---
 app.use("/api/*", async (c, next) => {
   if (c.req.path === "/api/health") return next();
-  // 1. Service-to-service
   const apiSecret = c.req.header("X-API-Secret");
   if (apiSecret && c.env.API_SECRET && apiSecret === c.env.API_SECRET) return next();
-  // 2. User JWT via cookie or Bearer
-  const token = getCookie(c, "session") || c.req.header("Authorization")?.replace("Bearer ", "");
+  const token = getToken(c);
   if (token) {
     try {
       const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
@@ -143,9 +141,7 @@ app.use("/api/*", async (c, next) => {
       if (payload.email === ALLOWED_EMAIL) return next();
     } catch {}
   }
-  // Allow unauthenticated if no secrets set (dev), else 401
   if (!c.env.JWT_SECRET && !c.env.API_SECRET) return next();
-  // For now, allow read-only without auth; enforce on write
   if (c.req.method === "GET") return next();
   return c.json({ error: "Unauthorized — only prashantkumarbharadwaj@gmail.com is whitelisted" }, 401);
 });
