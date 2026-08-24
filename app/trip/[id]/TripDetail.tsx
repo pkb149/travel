@@ -15,6 +15,7 @@ export default function TripDetailClient({ id }: { id: string }) {
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<typeof TABS[number]>("Itinerary");
   const [query, setQuery] = useState("");
+  const [mapMode, setMapMode] = useState<"map" | "list">("map");
 
   useEffect(() => setMounted(true), []);
   const trip = useMemo(() => trips.find((t) => t.id === id) ?? trips[0] ?? null, [trips, id]);
@@ -163,10 +164,27 @@ export default function TripDetailClient({ id }: { id: string }) {
                   <div className="text-sm font-semibold text-stone-800">Trip Map</div>
                   <p className="text-xs text-stone-500">OpenStreetMap · {groups.length} destinations</p>
                 </div>
-                <span className="rounded-full bg-white px-2 py-1 text-xs ring-1 ring-stone-200">View as List</span>
+                <button onClick={() => setMapMode(mapMode === "map" ? "list" : "map")} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">
+                  {mapMode === "map" ? "View as List" : "View as Map"}
+                </button>
               </div>
               <div className="mt-3">
-                <TripMap groups={groups} activeBase={activeDest} />
+                {mapMode === "map" ? (
+                  <TripMap groups={groups} activeBase={activeDest} />
+                ) : (
+                  <div className="space-y-2">
+                    {groups.map((g, i) => (
+                      <div key={g.base + i} className={`flex items-center gap-3 rounded-xl border p-3 ${activeDest === g.base ? "border-violet-200 bg-violet-50" : "border-stone-200 bg-stone-50"}`}>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">{i + 1}</span>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-stone-800">{g.emoji} {g.base}</div>
+                          <div className="text-xs text-stone-500">{g.days.length} {g.days.length === 1 ? "night" : "nights"} · {g.startDate} → {g.endDate}</div>
+                        </div>
+                        <button onClick={() => setActiveDest(g.base)} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50">View</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-4">
