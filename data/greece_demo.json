@@ -1,0 +1,94 @@
+{
+  "id": "trip_greece_20261201",
+  "title": "Greece Escape",
+  "country": "Greece",
+  "startDate": "2026-12-01",
+  "endDate": "2026-12-05",
+  "days": [
+    {
+      "id": "d1",
+      "date": "2026-12-01",
+      "base": "Athens",
+      "emoji": "🇬🇷",
+      "plan": "BLR → Athens → Acropolis → Plaka evening walk → rooftop dinner",
+      "flights": [
+        {
+          "id": "f1",
+          "from": "BLR",
+          "to": "ATH"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "h1",
+          "name": "Plaka Hotel",
+          "area": "Athens"
+        }
+      ],
+      "cabs": [],
+      "attachments": []
+    },
+    {
+      "id": "d2",
+      "date": "2026-12-02",
+      "base": "Athens",
+      "emoji": "🇬🇷",
+      "plan": "Acropolis Museum → Monastiraki Market → Café hopping → shopping → nightlife",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": []
+    },
+    {
+      "id": "d3",
+      "date": "2026-12-03",
+      "base": "Santorini",
+      "emoji": "🏝️",
+      "plan": "Athens → Santorini → Oia sunset → wine tasting → caldera dinner",
+      "flights": [
+        {
+          "id": "f2",
+          "from": "ATH",
+          "to": "JTR"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "h2",
+          "name": "Oia Cliff Resort",
+          "area": "Santorini"
+        }
+      ],
+      "cabs": [],
+      "attachments": []
+    },
+    {
+      "id": "d4",
+      "date": "2026-12-04",
+      "base": "Santorini",
+      "emoji": "🏝️",
+      "plan": "Boat tour → Red Beach → snorkeling → beach club → sunset",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": []
+    },
+    {
+      "id": "d5",
+      "date": "2026-12-05",
+      "base": "Home",
+      "emoji": "✈️",
+      "plan": "Santorini → Athens → BLR",
+      "flights": [
+        {
+          "id": "f3",
+          "from": "JTR",
+          "to": "BLR"
+        }
+      ],
+      "hotels": [],
+      "cabs": [],
+      "attachments": []
+    }
+  ]
+}

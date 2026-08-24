@@ -1,0 +1,27 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "travel-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-24",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "travel-db",
+      "migrations_dir": "../migrations",
+      "database_id": "01eec730-0aed-432a-8d8d-26f6e348652c"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "travel-attachments"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "FRONTEND_URL": "https://travel-7l1.pages.dev"
+  }
+}
