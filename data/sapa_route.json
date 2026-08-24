@@ -1,0 +1,598 @@
+{
+  "id": "trip_sapa_20261122",
+  "title": "Sapa Route — BLR→Hanoi→Sapa→Da Nang→HCMC→Phu Quoc→Singapore→BLR",
+  "country": "Vietnam + Singapore",
+  "startDate": "2026-11-22",
+  "endDate": "2026-12-05",
+  "budget": 400000,
+  "days": [
+    {
+      "id": "s1",
+      "date": "2026-11-22",
+      "base": "Hanoi",
+      "emoji": "🇻🇳",
+      "plan": "BLR → Kolkata (connect) → Hanoi → Old Quarter check-in → Hoan Kiem Lake walk",
+      "flights": [
+        {
+          "id": "sf1",
+          "from": "BLR",
+          "to": "HAN",
+          "notes": "via CCU (Kolkata)"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "sh1",
+          "name": "Old Quarter Hotel",
+          "area": "Hanoi"
+        }
+      ],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Old Quarter & Hoan Kiem free, personal allowed.",
+        "tripod": "Tripod allowed streets, not needed for lake.",
+        "drone": "No drones in Hanoi.",
+        "commercial": "No permit for personal.",
+        "notes": "Via Kolkata saves cost vs direct — per your budget style."
+      },
+      "activities": [
+        {
+          "time": "02:30",
+          "title": "BLR departure (via CCU)"
+        },
+        {
+          "time": "04:30",
+          "title": "Kolkata (connect)"
+        },
+        {
+          "time": "08:30",
+          "title": "Hanoi arrival"
+        },
+        {
+          "time": "14:00",
+          "title": "Old Quarter check-in"
+        },
+        {
+          "time": "17:00",
+          "title": "Hoan Kiem Lake walk"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "date": "2026-11-23",
+      "base": "Hanoi",
+      "emoji": "🇻🇳",
+      "plan": "Temple of Literature → Vietnamese coffee → Train Street → Old Quarter nightlife",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Temple: personal allowed, no flash; Train Street: personal allowed off tracks.",
+        "tripod": "Temple: no tripod inside without permission.",
+        "drone": "No drones.",
+        "commercial": "Temple commercial needs permit.",
+        "notes": "Train times ~3:30 PM & 7:30 PM."
+      },
+      "activities": [
+        {
+          "time": "09:00",
+          "title": "Temple of Literature"
+        },
+        {
+          "time": "11:00",
+          "title": "Vietnamese coffee"
+        },
+        {
+          "time": "15:30",
+          "title": "Train Street"
+        },
+        {
+          "time": "19:00",
+          "title": "Old Quarter nightlife"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "date": "2026-11-24",
+      "base": "Sapa",
+      "emoji": "🏔️",
+      "plan": "Hanoi → Sapa (bus 300 km, 5–6 h, Sapa Express/Limak) → Cat Cat Village walk → Sapa town evening",
+      "flights": [],
+      "hotels": [
+        {
+          "id": "sh2",
+          "name": "Sapa Mountain Resort",
+          "area": "Sapa"
+        }
+      ],
+      "cabs": [
+        {
+          "id": "sc1",
+          "type": "transfer",
+          "from": "Hanoi",
+          "to": "Sapa",
+          "provider": "Sapa Express Bus",
+          "notes": "300 km, 5-6 h"
+        }
+      ],
+      "attachments": [],
+      "photography": {
+        "allowed": "Sapa town & Cat Cat: personal allowed.",
+        "tripod": "Tripod allowed in town, not practical on village trek.",
+        "drone": "No drones in Sapa without CAAV + local permit (strict).",
+        "commercial": "No permit for personal.",
+        "notes": "Dec is cold/misty (10-15°C) — not lush terraces, but Fansipan misty is atmospheric."
+      },
+      "activities": [
+        {
+          "time": "07:00",
+          "title": "Hanoi → Sapa bus (300 km)"
+        },
+        {
+          "time": "13:00",
+          "title": "Sapa check-in"
+        },
+        {
+          "time": "15:00",
+          "title": "Cat Cat Village walk"
+        },
+        {
+          "time": "18:00",
+          "title": "Sapa town evening"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "date": "2026-11-25",
+      "base": "Sapa",
+      "emoji": "🏔️",
+      "plan": "Fansipan cable car → Heaven Gate → Moana viewpoint → trekking (Lao Chai/Ta Van if clear)",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Fansipan & viewpoints: personal allowed.",
+        "tripod": "Tripod allowed at viewpoints, not on cable car.",
+        "drone": "No drones at Fansipan (Sun World ban).",
+        "commercial": "No permit for personal.",
+        "notes": "Fansipan visibility weather-dependent — have backup spa/café plan."
+      },
+      "activities": [
+        {
+          "time": "08:00",
+          "title": "Fansipan cable car"
+        },
+        {
+          "time": "12:00",
+          "title": "Heaven Gate"
+        },
+        {
+          "time": "15:00",
+          "title": "Moana viewpoint & trek"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "date": "2026-11-26",
+      "base": "Hanoi",
+      "emoji": "🇻🇳",
+      "plan": "Sapa → Hanoi (bus 300 km, morning) → relaxed Old Quarter → café / spa",
+      "flights": [],
+      "hotels": [],
+      "cabs": [
+        {
+          "id": "sc2",
+          "type": "transfer",
+          "from": "Sapa",
+          "to": "Hanoi",
+          "provider": "Return bus",
+          "notes": "300 km"
+        }
+      ],
+      "attachments": [],
+      "photography": {
+        "allowed": "Bus journey personal allowed (window).",
+        "tripod": "Not needed.",
+        "drone": "No drones.",
+        "commercial": "-",
+        "notes": "Transit day — 5-6 h, book limousine bus for comfort."
+      },
+      "activities": [
+        {
+          "time": "08:00",
+          "title": "Sapa → Hanoi bus"
+        },
+        {
+          "time": "14:00",
+          "title": "Hanoi arrival & café"
+        },
+        {
+          "time": "18:00",
+          "title": "Old Quarter relaxed evening"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "date": "2026-11-27",
+      "base": "Da Nang",
+      "emoji": "🇻🇳",
+      "plan": "Hanoi → Da Nang (flight 1 h 20 m) → My Khe Beach → riverside dinner → Dragon Bridge (if Fri-Sun 9 PM)",
+      "flights": [
+        {
+          "id": "sf2",
+          "from": "HAN",
+          "to": "DAD",
+          "notes": "Flight"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "sh3",
+          "name": "My Khe Beach Hotel",
+          "area": "Da Nang"
+        }
+      ],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "My Khe Beach & Dragon Bridge: personal allowed.",
+        "tripod": "Tripod allowed at beach and Dragon Bridge viewpoint.",
+        "drone": "No drones over Dragon Bridge during show.",
+        "commercial": "No permit for personal.",
+        "notes": "Dragon Bridge fire/water only Fri-Sun 9 PM — check day."
+      },
+      "activities": [
+        {
+          "time": "10:00",
+          "title": "Hanoi → Da Nang flight"
+        },
+        {
+          "time": "11:30",
+          "title": "Da Nang check-in"
+        },
+        {
+          "time": "16:00",
+          "title": "My Khe Beach"
+        },
+        {
+          "time": "19:30",
+          "title": "Riverside dinner + Dragon Bridge (21:00 Fri-Sun)"
+        }
+      ]
+    },
+    {
+      "id": "s7",
+      "date": "2026-11-28",
+      "base": "Da Nang",
+      "emoji": "🇻🇳",
+      "plan": "Marble Mountains → Ba Na Hills option (Golden Bridge) or My Khe pool → night market",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Marble Mountains: personal allowed; Ba Na Golden Bridge: personal allowed.",
+        "tripod": "Marble caves: no tripod; Golden Bridge: arrive <8 AM for tripod.",
+        "drone": "No drones at Marble Mountains or Ba Na (Sun World ban).",
+        "commercial": "Ba Na commercial needs Sun World permit.",
+        "notes": "Choose Ba Na if you skipped it before — cable car is record long."
+      },
+      "activities": [
+        {
+          "time": "08:30",
+          "title": "Marble Mountains"
+        },
+        {
+          "time": "12:00",
+          "title": "My Khe Beach & pool"
+        },
+        {
+          "time": "15:00",
+          "title": "Pool party"
+        },
+        {
+          "time": "19:00",
+          "title": "Night market"
+        }
+      ]
+    },
+    {
+      "id": "s8",
+      "date": "2026-11-29",
+      "base": "HCMC",
+      "emoji": "🌃",
+      "plan": "Da Nang → HCMC (flight) → Ben Thanh Market → Café Apartment → Nguyen Hue Walking Street",
+      "flights": [
+        {
+          "id": "sf3",
+          "from": "DAD",
+          "to": "SGN",
+          "notes": "Flight"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "sh4",
+          "name": "District 1 Hotel",
+          "area": "HCMC"
+        }
+      ],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Ben Thanh & Café Apartment: personal allowed; Walking Street: personal allowed.",
+        "tripod": "Tripods not allowed inside Ben Thanh stalls or War Remnants; allowed on walking street.",
+        "drone": "No drones in District 1.",
+        "commercial": "Café Apartment fashion shoots need fee.",
+        "notes": "Keep HCMC short as you prefer — 2 nights max."
+      },
+      "activities": [
+        {
+          "time": "10:00",
+          "title": "Da Nang → HCMC flight"
+        },
+        {
+          "time": "11:30",
+          "title": "HCMC check-in"
+        },
+        {
+          "time": "16:00",
+          "title": "Ben Thanh Market"
+        },
+        {
+          "time": "18:00",
+          "title": "Café Apartment"
+        },
+        {
+          "time": "20:00",
+          "title": "Nguyen Hue Walking Street"
+        }
+      ]
+    },
+    {
+      "id": "s9",
+      "date": "2026-11-30",
+      "base": "HCMC",
+      "emoji": "🌃",
+      "plan": "War Remnants Museum → spa → rooftop bar → Mekong Delta optional (if time)",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "War Remnants: personal allowed but no photos in some exhibits (follow signs).",
+        "tripod": "No tripods inside museum.",
+        "drone": "No drones.",
+        "commercial": "-",
+        "notes": "Mekong is full-day — skip if you want more Phu Quoc beach time."
+      },
+      "activities": [
+        {
+          "time": "08:30",
+          "title": "War Remnants Museum"
+        },
+        {
+          "time": "12:00",
+          "title": "Spa & rooftop bar"
+        },
+        {
+          "time": "16:00",
+          "title": "Mekong Delta (optional)"
+        }
+      ]
+    },
+    {
+      "id": "s10",
+      "date": "2026-12-01",
+      "base": "Phu Quoc",
+      "emoji": "🏝️",
+      "plan": "HCMC → Phu Quoc (flight) → resort check-in → Long Beach sunset → beach dinner",
+      "flights": [
+        {
+          "id": "sf4",
+          "from": "SGN",
+          "to": "PQC",
+          "notes": "Flight"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "sh5",
+          "name": "Phu Quoc Resort",
+          "area": "Phu Quoc"
+        }
+      ],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Long Beach sunset: personal allowed.",
+        "tripod": "Tripods allowed on beach.",
+        "drone": "Beach drone needs CAAV permit (relaxed but official).",
+        "commercial": "Resort personal fine.",
+        "notes": "Sunset ~5:45 PM — prime."
+      },
+      "activities": [
+        {
+          "time": "10:00",
+          "title": "HCMC → Phu Quoc flight"
+        },
+        {
+          "time": "11:30",
+          "title": "Resort check-in"
+        },
+        {
+          "time": "17:00",
+          "title": "Long Beach sunset"
+        },
+        {
+          "time": "19:00",
+          "title": "Beach dinner"
+        }
+      ]
+    },
+    {
+      "id": "s11",
+      "date": "2026-12-02",
+      "base": "Phu Quoc",
+      "emoji": "🏝️",
+      "plan": "Island hopping + snorkeling + foam party → Hon Thom Cable Car → beach club",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Island hopping/snorkeling: personal (waterproof case); Cable Car: personal through glass.",
+        "tripod": "Not practical on boats; allowed at Hon Thom station.",
+        "drone": "No drones from boats or cable car area.",
+        "commercial": "Need boat operator permission.",
+        "notes": "Cable car 7.9 km — reflections through glass."
+      },
+      "activities": [
+        {
+          "time": "08:00",
+          "title": "Island hopping + snorkeling"
+        },
+        {
+          "time": "11:00",
+          "title": "Foam party"
+        },
+        {
+          "time": "14:00",
+          "title": "Hon Thom Cable Car"
+        },
+        {
+          "time": "17:00",
+          "title": "Beach club sunset"
+        }
+      ]
+    },
+    {
+      "id": "s12",
+      "date": "2026-12-03",
+      "base": "Phu Quoc",
+      "emoji": "🏝️",
+      "plan": "VinWonders → Grand World (Venice/London) → Kiss Bridge → 9 PM fireworks",
+      "flights": [],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "VinWonders & Grand World: personal allowed; Kiss Bridge fireworks: personal allowed.",
+        "tripod": "VinWonders: no tripod on rides; Grand World & Kiss Bridge: tripod allowed (arrive 8:30 PM).",
+        "drone": "No drones in VinWonders/Grand World.",
+        "commercial": "VinGroup needs permit.",
+        "notes": "Fireworks 9 PM daily — very crowded after 8:30 PM."
+      },
+      "activities": [
+        {
+          "time": "09:00",
+          "title": "VinWonders"
+        },
+        {
+          "time": "15:00",
+          "title": "Grand World (Venice/London)"
+        },
+        {
+          "time": "19:00",
+          "title": "Kiss Bridge"
+        },
+        {
+          "time": "21:00",
+          "title": "Fireworks (21:00)"
+        }
+      ]
+    },
+    {
+      "id": "s13",
+      "date": "2026-12-04",
+      "base": "Singapore",
+      "emoji": "🇸🇬",
+      "plan": "Phu Quoc → Singapore (via HCMC) → Marina Bay → Gardens by the Bay (evening SuperTree 7:45 PM) → Clarke Quay",
+      "flights": [
+        {
+          "id": "sf5",
+          "from": "PQC",
+          "to": "SIN",
+          "notes": "via SGN"
+        }
+      ],
+      "hotels": [
+        {
+          "id": "sh6",
+          "name": "Marina Bay Hotel",
+          "area": "Singapore"
+        }
+      ],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Marina Bay & Gardens outdoor: personal allowed.",
+        "tripod": "Gardens: tripods banned in Flower Dome/Cloud Forest/Floral Fantasy/OCBC Skyway; outdoor ok.",
+        "drone": "No drones in Singapore (CAAS strict).",
+        "commercial": "Gardens commercial needs permit.",
+        "notes": "Break long flight BLR-bound via Singapore as you prefer vs 12h direct."
+      },
+      "activities": [
+        {
+          "time": "11:00",
+          "title": "Phu Quoc → Singapore via HCMC"
+        },
+        {
+          "time": "16:00",
+          "title": "Marina Bay"
+        },
+        {
+          "time": "19:45",
+          "title": "Gardens by the Bay SuperTree light show"
+        },
+        {
+          "time": "21:00",
+          "title": "Clarke Quay nightlife"
+        }
+      ]
+    },
+    {
+      "id": "s14",
+      "date": "2026-12-05",
+      "base": "Home",
+      "emoji": "✈️",
+      "plan": "Singapore → BLR (direct or via) → home",
+      "flights": [
+        {
+          "id": "sf6",
+          "from": "SIN",
+          "to": "BLR",
+          "notes": "Direct"
+        }
+      ],
+      "hotels": [],
+      "cabs": [],
+      "attachments": [],
+      "photography": {
+        "allowed": "Airport public areas personal allowed.",
+        "tripod": "Allowed.",
+        "drone": "No drones in airports.",
+        "commercial": "-",
+        "notes": "End of 14-day Sapa route."
+      },
+      "activities": [
+        {
+          "time": "10:00",
+          "title": "Singapore → BLR flight"
+        },
+        {
+          "time": "13:00",
+          "title": "BLR arrival"
+        }
+      ]
+    }
+  ]
+}

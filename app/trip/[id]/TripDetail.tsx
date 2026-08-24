@@ -11,7 +11,7 @@ import TripMap from "@/components/TripMap";
 const TABS = ["Itinerary", "Stay", "Notes", "Bookings", "Expenses", "Photos"] as const;
 
 export default function TripDetailClient({ id }: { id: string }) {
-  const { trips, selectedDayId, setSelectedDay, addDay, removeDay, duplicateDay } = useTravel();
+  const { trips, selectedDayId, setSelectedDay, addDay, removeDay, duplicateDay, updateDay } = useTravel();
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<typeof TABS[number]>("Itinerary");
   const [query, setQuery] = useState("");
@@ -78,29 +78,55 @@ export default function TripDetailClient({ id }: { id: string }) {
                   <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search activities…" className="flex-1 rounded-full border border-stone-200 bg-white px-4 py-2 text-xs focus:border-violet-500 focus:outline-none" />
                   <button onClick={() => addDay(trip.id, destDays[destDays.length - 1]?.id ?? trip.days[trip.days.length - 1]?.id ?? "")} className="rounded-full bg-white px-3 py-2 text-xs font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">+ Add Activity</button>
                 </div>
-                {destDays.filter((d) => !query || d.plan.toLowerCase().includes(query.toLowerCase())).map((day) => {
+                {destDays.filter((d) => !query || d.plan.toLowerCase().includes(query.toLowerCase()) || d.activities?.some((a) => a.title.toLowerCase().includes(query.toLowerCase()))).map((day) => {
                   const chips = planToChips(day.plan);
+                  const activities = day.activities && day.activities.length > 0 ? day.activities : chips.map((title, i) => ({ time: `${String(10 + i).padStart(2, "0")}:00`, title }));
                   const idx = trip.days.indexOf(day);
                   const isSelected = selected?.id === day.id;
+                  const updateActivities = (next: typeof activities) => updateDay(trip.id, day.id, { activities: next });
                   return (
                     <div key={day.id} className={`rounded-2xl border bg-white p-4 ${isSelected ? "border-violet-600 ring-1 ring-violet-600" : "border-stone-200"}`}>
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold text-stone-700">Day {idx + 1} – {dateLabel(day.date)} · {day.base} {day.emoji}</div>
                         <div className="flex gap-1">
-                          <button onClick={() => setSelectedDay(day.id)} className={`rounded-full px-2.5 py-1 text-xs ${isSelected ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}>✎ Edit</button>
+                          <button onClick={() => setSelectedDay(isSelected ? null : day.id)} className={`rounded-full px-2.5 py-1 text-xs ${isSelected ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}>{isSelected ? "Done" : "✎ Edit"}</button>
                           <button onClick={() => duplicateDay(trip.id, day.id)} className="rounded-full bg-stone-100 px-2 py-1 text-xs text-stone-600">⧉</button>
                           <button onClick={() => { if (confirm("Delete?")) removeDay(trip.id, day.id); }} className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-600">🗑</button>
                         </div>
                       </div>
                       <div className="mt-2 space-y-2">
-                        {chips.map((c, i) => (
-                          <div key={i} className="flex items-center gap-3 rounded-xl bg-stone-50 px-3 py-2">
-                            <span className="text-xs font-medium text-stone-500">{String(10 + i).padStart(2, "0")}:00</span>
-                            <span className="flex-1 text-xs font-medium text-stone-800">{c}</span>
-                            <span className="text-stone-400">⋮</span>
+                        {activities.map((a, i) => (
+                          <div key={i} className="flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
+                            {isSelected ? (
+                              <>
+                                <input type="time" value={a.time} onChange={(e) => {
+                                  const next = [...activities];
+                                  next[i] = { ...next[i], time: e.target.value };
+                                  updateActivities(next);
+                                }} className="w-24 rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs focus:border-violet-500 focus:outline-none" />
+                                <input value={a.title} onChange={(e) => {
+                                  const next = [...activities];
+                                  next[i] = { ...next[i], title: e.target.value };
+                                  updateActivities(next);
+                                }} className="flex-1 rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs focus:border-violet-500 focus:outline-none" />
+                                <button onClick={() => {
+                                  const next = activities.filter((_, idx) => idx !== i);
+                                  updateActivities(next);
+                                }} className="text-xs text-red-500">✕</button>
+                              </>
+                            ) : (
+                              <>
+                                <span className="w-14 shrink-0 rounded bg-white px-2 py-1 text-center text-xs font-medium text-violet-700 ring-1 ring-violet-100">{a.time}</span>
+                                <span className="flex-1 text-xs font-medium text-stone-800">{a.title}</span>
+                                <span className="text-stone-400">⋮</span>
+                              </>
+                            )}
                           </div>
                         ))}
-                        {chips.length === 0 && <p className="text-xs italic text-stone-400">No activities — edit to add.</p>}
+                        {isSelected && (
+                          <button onClick={() => updateActivities([...activities, { time: "10:00", title: "" }])} className="w-full rounded-xl border border-dashed border-stone-300 bg-white py-2 text-xs font-medium text-stone-600 hover:bg-stone-50">+ Add activity</button>
+                        )}
+                        {activities.length === 0 && !isSelected && <p className="text-xs italic text-stone-400">No activities — click Edit to add.</p>}
                       </div>
                       {day.photography && (
                         <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-2.5">

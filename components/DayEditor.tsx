@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { DayNode, Flight, Hotel, Cab, Attachment, PhotographyRule } from "@/lib/types";
+import type { DayNode, Flight, Hotel, Cab, Attachment, PhotographyRule, Activity } from "@/lib/types";
 import { useTravel } from "@/lib/store";
 import { uid, planToChips } from "@/lib/utils";
 
@@ -20,9 +20,25 @@ export default function DayEditor({ tripId, day }: { tripId: string; day: DayNod
   const updateDay = useTravel((s) => s.updateDay);
   const [planDraft, setPlanDraft] = useState(day.plan);
   const chips = planToChips(day.plan);
-  const savePlan = () => updateDay(tripId, day.id, { plan: planDraft });
+  const savePlan = () => {
+    updateDay(tripId, day.id, { plan: planDraft });
+    // Auto-generate activities from plan if none exist, keep times editable separately
+    if (!day.activities || day.activities.length === 0) {
+      const acts: Activity[] = chips.map((title, i) => ({ time: `${String(10 + i).padStart(2, "0")}:00`, title }));
+      updateDay(tripId, day.id, { activities: acts });
+    }
+  };
   const photo: PhotographyRule = day.photography || { allowed: "", tripod: "", drone: "", commercial: "", notes: "" };
   const setPhoto = (patch: Partial<PhotographyRule>) => updateDay(tripId, day.id, { photography: { ...photo, ...patch } });
+  const activities: Activity[] = day.activities || [];
+  const updateActivities = (next: Activity[]) => updateDay(tripId, day.id, { activities: next });
+  const addActivity = () => updateActivities([...activities, { time: "10:00", title: "" }]);
+  const updateActivity = (idx: number, patch: Partial<Activity>) => {
+    const next = [...activities];
+    next[idx] = { ...next[idx], ...patch };
+    updateActivities(next);
+  };
+  const removeActivity = (idx: number) => updateActivities(activities.filter((_, i) => i !== idx));
 
   return (
     <div className="space-y-4">
@@ -40,8 +56,21 @@ export default function DayEditor({ tripId, day }: { tripId: string; day: DayNod
           <input value={day.notes ?? ""} onChange={(e) => updateDay(tripId, day.id, { notes: e.target.value })} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none" placeholder="optional" />
         </label>
       </div>
+
+      <Section title="⏰ Activities (time + title) — accurate time, arrow still separates but time is editable" count={activities.length} onAdd={addActivity} addLabel="Activity">
+        <p className="text-xs text-stone-500">Each activity has its own time. Edit time directly; arrow in plan is just visual. Add/edit here for accurate schedule (e.g. 02:30 BLR, 04:30 Kolkata).</p>
+        {activities.length === 0 && <p className="text-xs text-stone-500">No timed activities yet — click + Activity or Save plan to auto-generate from plan.</p>}
+        {activities.map((a, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input type="time" value={a.time} onChange={(e) => updateActivity(i, { time: e.target.value })} className="w-28 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+            <input value={a.title} onChange={(e) => updateActivity(i, { title: e.target.value })} placeholder="Activity" className="flex-1 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+            <button onClick={() => removeActivity(i)} className="text-xs text-red-600">✕</button>
+          </div>
+        ))}
+      </Section>
+
       <div>
-        <label className="text-xs font-semibold uppercase tracking-widest text-stone-500">Plan — use → to separate steps</label>
+        <label className="text-xs font-semibold uppercase tracking-widest text-stone-500">Plan — use → to separate steps (fallback if no activities)</label>
         <textarea value={planDraft} onChange={(e) => setPlanDraft(e.target.value)} rows={3} className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none" placeholder="Temple → Market → Cafe" />
         <div className="mt-2 flex flex-wrap gap-1.5">
           {chips.map((c, i) => <span key={i} className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200">{c}</span>)}

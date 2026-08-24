@@ -54,6 +54,11 @@ export type PhotographyRule = {
   notes?: string;
 };
 
+export type Activity = {
+  time: string;
+  title: string;
+};
+
 export type DayNode = {
   id: string;
   date: string;
@@ -67,6 +72,7 @@ export type DayNode = {
   notes?: string;
   color?: string;
   photography?: PhotographyRule;
+  activities?: Activity[];
 };
 
 export type Trip = {
