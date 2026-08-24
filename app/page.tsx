@@ -17,8 +17,16 @@ export default function Home() {
   const [country, setCountry] = useState("");
   const [discoverQ, setDiscoverQ] = useState("");
   const [tag, setTag] = useState<string>("All");
+  const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setAuthed(!!d?.authenticated))
+      .catch(() => setAuthed(false));
+  }, []);
+
   const onImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
     const r = new FileReader(); r.onload = () => { try {
@@ -28,18 +36,16 @@ export default function Home() {
     } catch {} }; r.readAsText(f);
   };
 
-  if (!mounted) return <div className="flex min-h-screen"><Sidebar /><div className="flex-1 p-8 text-sm text-stone-500">Loading…</div></div>;
-
   const totalDays = trips.reduce((n, t) => n + t.days.length, 0);
   const totalBookings = trips.reduce((n, t) => n + tripStats(t).bookings, 0);
   const totalBudget = trips.reduce((n, t) => n + (t.budget ?? 400000), 0);
 
-  const tags = ["All", ...Array.from(new Set(SUGGESTED.map((s) => s.tag)))];
-  const filtered = SUGGESTED.filter((s) => {
+  const tags = useMemo(() => ["All", ...Array.from(new Set(SUGGESTED.map((s) => s.tag)))], []);
+  const filtered = useMemo(() => SUGGESTED.filter((s) => {
     if (tag !== "All" && s.tag !== tag) return false;
     if (discoverQ && !`${s.country} ${s.city} ${s.tag}`.toLowerCase().includes(discoverQ.toLowerCase())) return false;
     return true;
-  });
+  }), [tag, discoverQ]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, typeof SUGGESTED>();
@@ -49,6 +55,29 @@ export default function Home() {
     }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [filtered]);
+
+  if (!mounted) return <div className="flex min-h-screen"><Sidebar /><div className="flex-1 p-8 text-sm text-stone-500">Loading…</div></div>;
+
+  if (authed === false) {
+    return (
+      <div className="flex min-h-screen bg-[#f8f7f5]">
+        <Sidebar />
+        <div className="flex flex-1 items-center justify-center p-6">
+          <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600 text-white">✦</div>
+            <h1 className="mt-4 text-lg font-bold text-stone-800">Sign in to Travel</h1>
+            <p className="mt-1 text-xs leading-relaxed text-stone-500">Only <b>prashantkumarbharadwaj@gmail.com</b> is whitelisted. Please sign in with Google to view your trips. Your data is private — R2 is only accessible via API.</p>
+            <div className="mt-6 flex justify-center"><GoogleAuth /></div>
+            <p className="mt-4 text-[11px] text-stone-400">Redirect will be to <code>https://travel-api.../auth/callback</code> — add it in Google Console project <code>paired-498510</code> if not already.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authed === null) {
+    return <div className="flex min-h-screen"><Sidebar /><div className="flex-1 p-8 text-sm text-stone-500">Checking auth…</div></div>;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f8f7f5]">

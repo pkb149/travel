@@ -6,7 +6,7 @@ import { useState } from "react";
 const NAV = [
   { icon: "◧", label: "Dashboard", href: "/", done: true },
   { icon: "✈", label: "Itinerary", href: "/trip/vietnam-2026", done: true },
-  { icon: "◎", label: "Destinations", href: "/#destinations", done: false },
+  { icon: "◎", label: "Destinations", href: "/#discover", done: true },
   { icon: "▭", label: "Bookings", href: "/trip/vietnam-2026", tab: "Bookings", done: false },
   { icon: "₹", label: "Budget", href: "/trip/vietnam-2026", tab: "Expenses", done: false },
   { icon: "🗺", label: "Map View", href: "/trip/vietnam-2026", tab: "Itinerary", anchor: "map", done: false },
