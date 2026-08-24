@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { TripCard, StatCard } from "@/components/TripCards";
 import { tripStats } from "@/lib/destinations";
 import { SUGGESTED } from "@/data/discover";
-import Link from "next/link";
+import GoogleAuth from "@/components/GoogleAuth";
 
 const FALLBACK = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80&auto=format&fit=crop";
 
@@ -31,7 +31,6 @@ export default function Home() {
   if (!mounted) return <div className="flex min-h-screen"><Sidebar /><div className="flex-1 p-8 text-sm text-stone-500">Loading…</div></div>;
 
   const totalDays = trips.reduce((n, t) => n + t.days.length, 0);
-  const totalDests = trips.reduce((n, t) => n + new Set(t.days.map((d) => d.base)).size, 0);
   const totalBookings = trips.reduce((n, t) => n + tripStats(t).bookings, 0);
   const totalBudget = trips.reduce((n, t) => n + (t.budget ?? 400000), 0);
 
@@ -41,6 +40,15 @@ export default function Home() {
     if (discoverQ && !`${s.country} ${s.city} ${s.tag}`.toLowerCase().includes(discoverQ.toLowerCase())) return false;
     return true;
   });
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof SUGGESTED>();
+    for (const s of filtered) {
+      if (!map.has(s.country)) map.set(s.country, []);
+      map.get(s.country)!.push(s);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [filtered]);
 
   return (
     <div className="flex min-h-screen bg-[#f8f7f5]">
@@ -52,6 +60,7 @@ export default function Home() {
             <p className="text-xs text-stone-500">Let&apos;s make your dream trip unforgettable.</p>
           </div>
           <div className="flex items-center gap-2">
+            <GoogleAuth />
             <button onClick={() => setShowNew(!showNew)} className="rounded-full bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">+ New trip</button>
             <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50">⌕<input type="file" accept=".json" onChange={onImport} className="hidden" /></label>
             <button className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500">🔔</button>
@@ -85,11 +94,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-8">
+          <div id="discover" className="mt-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-stone-800">Discover — places you can visit</h2>
-                <p className="text-xs text-stone-500">50+ destinations — tap to create a new trip with the travel-planner skill.</p>
+                <p className="text-xs text-stone-500">50+ destinations grouped by country — tap a city to create a trip. {filtered.length} places in {grouped.length} countries.</p>
               </div>
               <input value={discoverQ} onChange={(e) => setDiscoverQ(e.target.value)} placeholder="Search country, city…" className="w-full rounded-full border border-stone-200 bg-white px-4 py-2 text-xs focus:border-violet-500 focus:outline-none sm:w-64" />
             </div>
@@ -98,33 +107,47 @@ export default function Home() {
                 <button key={t} onClick={() => setTag(t)} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${tag === t ? "bg-violet-600 text-white ring-violet-600" : "bg-white text-stone-600 ring-stone-200 hover:bg-stone-50"}`}>{t}</button>
               ))}
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {filtered.map((s) => (
-                <button
-                  key={s.country + s.city}
-                  onClick={() => {
-                    const name = `${s.city}, ${s.country}`;
-                    if (confirm(`Create a new trip for ${name}?`)) createTrip({ title: `${s.city} Trip`, country: s.country });
-                  }}
-                  className="group overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-sm hover:shadow-md"
-                >
-                  <div className="h-32 overflow-hidden bg-stone-100">
-                    <img
-                      src={s.cover}
-                      alt={s.city}
-                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                      loading="lazy"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
-                    />
+
+            <div className="mt-4 space-y-8">
+              {grouped.map(([countryName, places]) => (
+                <div key={countryName}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-stone-800">{places[0].emoji} {countryName}</h3>
+                    <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600">{places.length} {places.length === 1 ? "place" : "places"}</span>
+                    <span className="h-px flex-1 bg-stone-200" />
                   </div>
-                  <div className="p-3">
-                    <div className="flex items-center gap-1.5 text-sm font-semibold text-stone-800">{s.emoji} {s.city}</div>
-                    <div className="text-xs text-stone-500">{s.country} · {s.tag}</div>
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {places.map((s) => (
+                      <button
+                        key={s.country + s.city}
+                        onClick={() => {
+                          const name = `${s.city}, ${s.country}`;
+                          if (confirm(`Create a new trip for ${name}?`)) createTrip({ title: `${s.city} Trip`, country: s.country });
+                        }}
+                        className="group overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-sm hover:shadow-md"
+                      >
+                        <div className="h-32 overflow-hidden bg-stone-100">
+                          <img
+                            src={s.cover}
+                            alt={s.city}
+                            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                            loading="lazy"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
+                          />
+                        </div>
+                        <div className="p-3">
+                          <div className="text-sm font-semibold text-stone-800">{s.city}</div>
+                          <div className="text-xs text-stone-500">{s.tag} · {s.country}</div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-stone-400">{filtered.length} places shown — all images via picsum/unsplash with fallback.</p>
+
+            {filtered.length === 0 && <p className="mt-6 text-center text-xs text-stone-400">No places match &ldquo;{discoverQ}&rdquo;.</p>}
+            <p className="mt-4 text-xs text-stone-400">All images via picsum/unsplash with fallback — grouped by country as requested.</p>
           </div>
         </div>
       </div>
