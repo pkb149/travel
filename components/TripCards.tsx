@@ -3,13 +3,29 @@ import Link from "next/link";
 import type { Trip } from "@/lib/types";
 import { tripStats, formatDayRange, getCover } from "@/lib/destinations";
 
+const FALLBACK = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80&auto=format&fit=crop";
+
+function Img({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading="lazy"
+      onError={(e) => {
+        const el = e.currentTarget as HTMLImageElement;
+        if (el.src !== FALLBACK) el.src = FALLBACK;
+      }}
+    />
+  );
+}
+
 export function TripCard({ trip }: { trip: Trip }) {
   const { days, dests, bookings, budget } = tripStats(trip);
   return (
     <Link href={`/trip/${trip.id}`} className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm hover:shadow-md">
       <div className="h-36 overflow-hidden bg-stone-100">
-        {/* eslint-disable @next/next/no-img-element */}
-        <img src={trip.cover || getCover(trip.country)} alt={trip.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+        <Img src={trip.cover || getCover(trip.country)} alt={trip.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
       </div>
       <div className="p-3">
         <div className="text-sm font-semibold text-stone-800">{trip.title}</div>
@@ -28,7 +44,7 @@ export function DestinationCard({ base, emoji, cover, startDate, endDate, nights
   return (
     <button onClick={onClick} className="group w-full overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-sm hover:shadow-md">
       <div className="h-32 overflow-hidden bg-stone-100">
-        <img src={cover} alt={base} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+        <Img src={cover} alt={base} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
       </div>
       <div className="p-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold text-stone-800">{emoji} {base}</div>

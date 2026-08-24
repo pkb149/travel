@@ -1,21 +1,28 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const NAV = [
-  { icon: "◧", label: "Dashboard", href: "/" },
-  { icon: "✈", label: "Itinerary", href: "/" },
-  { icon: "◎", label: "Destinations", href: "/" },
-  { icon: "▭", label: "Bookings", href: "/" },
-  { icon: "₹", label: "Budget", href: "/" },
-  { icon: "🗺", label: "Map View", href: "/" },
-  { icon: "≡", label: "Notes", href: "/" },
-  { icon: "📄", label: "Documents", href: "/" },
+  { icon: "◧", label: "Dashboard", href: "/", done: true },
+  { icon: "✈", label: "Itinerary", href: "/trip/vietnam-2026", done: true },
+  { icon: "◎", label: "Destinations", href: "/#destinations", done: false },
+  { icon: "▭", label: "Bookings", href: "/trip/vietnam-2026", tab: "Bookings", done: false },
+  { icon: "₹", label: "Budget", href: "/trip/vietnam-2026", tab: "Expenses", done: false },
+  { icon: "🗺", label: "Map View", href: "/trip/vietnam-2026", tab: "Itinerary", anchor: "map", done: false },
+  { icon: "≡", label: "Notes", href: "/trip/vietnam-2026", tab: "Notes", done: false },
+  { icon: "📄", label: "Documents", href: "/trip/vietnam-2026", tab: "Photos", done: false },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const isActive = (href: string) => pathname === href;
+  const router = useRouter();
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2000);
+  };
 
   return (
     <aside className="hidden w-[220px] shrink-0 flex-col border-r border-stone-200 bg-white lg:flex">
@@ -24,12 +31,27 @@ export default function Sidebar() {
         <span className="text-sm font-bold text-violet-700">WanderPlan</span>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {NAV.map((n) => (
-          <Link key={n.label} href={n.href} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium ${isActive(n.href) && n.label === "Dashboard" ? "bg-violet-50 text-violet-700" : "text-stone-500 hover:bg-stone-50"}`}>
-            <span className="w-4 text-center text-[11px]">{n.icon}</span> {n.label}
-          </Link>
-        ))}
+        {NAV.map((n) => {
+          const active = (n.label === "Dashboard" && pathname === "/") || (n.label === "Itinerary" && pathname.startsWith("/trip"));
+          if (n.done) {
+            return (
+              <Link key={n.label} href={n.href} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium ${active ? "bg-violet-50 text-violet-700" : "text-stone-500 hover:bg-stone-50"}`}>
+                <span className="w-4 text-center text-[11px]">{n.icon}</span> {n.label}
+              </Link>
+            );
+          }
+          return (
+            <button
+              key={n.label}
+              onClick={() => showToast(`${n.label} — coming soon`)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-stone-400 hover:bg-stone-50 hover:text-stone-500"
+            >
+              <span className="w-4 text-center text-[11px]">{n.icon}</span> {n.label} <span className="ml-auto text-[10px] text-stone-400">soon</span>
+            </button>
+          );
+        })}
       </nav>
+      {toast && <div className="mx-3 mb-2 rounded-lg bg-stone-800 px-3 py-2 text-xs text-white">{toast}</div>}
       <div className="border-t border-stone-100 p-3">
         <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-3 ring-1 ring-amber-100">
           <div className="text-xs font-semibold text-stone-800">Your Trip</div>

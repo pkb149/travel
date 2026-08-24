@@ -2,9 +2,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTravel } from "@/lib/store";
 import Sidebar from "@/components/Sidebar";
-import { TripCard, DestinationCard, StatCard } from "@/components/TripCards";
+import { TripCard, StatCard } from "@/components/TripCards";
 import { tripStats } from "@/lib/destinations";
+import { SUGGESTED } from "@/data/discover";
 import Link from "next/link";
+
+const FALLBACK = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80&auto=format&fit=crop";
 
 export default function Home() {
   const { trips, createTrip, importTrips } = useTravel();
@@ -12,6 +15,8 @@ export default function Home() {
   const [showNew, setShowNew] = useState(false);
   const [title, setTitle] = useState("");
   const [country, setCountry] = useState("");
+  const [discoverQ, setDiscoverQ] = useState("");
+  const [tag, setTag] = useState<string>("All");
 
   useEffect(() => setMounted(true), []);
   const onImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,21 +30,30 @@ export default function Home() {
 
   if (!mounted) return <div className="flex min-h-screen"><Sidebar /><div className="flex-1 p-8 text-sm text-stone-500">Loading…</div></div>;
 
-  const featured = trips[0] ? tripStats(trips[0]) : null;
+  const totalDays = trips.reduce((n, t) => n + t.days.length, 0);
+  const totalDests = trips.reduce((n, t) => n + new Set(t.days.map((d) => d.base)).size, 0);
+  const totalBookings = trips.reduce((n, t) => n + tripStats(t).bookings, 0);
+  const totalBudget = trips.reduce((n, t) => n + (t.budget ?? 400000), 0);
+
+  const tags = ["All", ...Array.from(new Set(SUGGESTED.map((s) => s.tag)))];
+  const filtered = SUGGESTED.filter((s) => {
+    if (tag !== "All" && s.tag !== tag) return false;
+    if (discoverQ && !`${s.country} ${s.city} ${s.tag}`.toLowerCase().includes(discoverQ.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div className="flex min-h-screen bg-[#f8f7f5]">
       <Sidebar />
       <div className="flex-1">
-        {/* Top bar */}
         <div className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-stone-200 bg-white px-6">
           <div>
             <h1 className="text-lg font-bold text-stone-800">Hello, Prashant! <span className="text-amber-500">👋</span></h1>
             <p className="text-xs text-stone-500">Let&apos;s make your dream trip unforgettable.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowNew(!showNew)} className="rounded-full bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">+ Add Destination</button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500">⌕</button>
+            <button onClick={() => setShowNew(!showNew)} className="rounded-full bg-violet-600 px-4 py-2 text-xs font-semibold text-white hover:bg-violet-700">+ New trip</button>
+            <label className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 hover:bg-stone-50">⌕<input type="file" accept=".json" onChange={onImport} className="hidden" /></label>
             <button className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500">🔔</button>
           </div>
         </div>
@@ -54,46 +68,63 @@ export default function Home() {
             </div>
           )}
 
-          {/* Stats */}
-          {featured && (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <StatCard icon="📅" value={`${featured.days}`} label="Days" bg="bg-violet-50 text-violet-700" />
-              <StatCard icon="◎" value={`${featured.dests}`} label="Destinations" bg="bg-emerald-50 text-emerald-700" />
-              <StatCard icon="🎫" value={`${featured.bookings}`} label="Bookings" bg="bg-orange-50 text-orange-700" />
-              <StatCard icon="₹" value={`₹${featured.budget.toLocaleString("en-IN")}`} label="Est. Budget" bg="bg-violet-50 text-violet-700" />
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard icon="📅" value={`${totalDays}`} label="Days" bg="bg-violet-50 text-violet-700" />
+            <StatCard icon="◎" value={`${trips.length}`} label="Trips" bg="bg-emerald-50 text-emerald-700" />
+            <StatCard icon="🎫" value={`${totalBookings}`} label="Bookings" bg="bg-orange-50 text-orange-700" />
+            <StatCard icon="₹" value={`₹${totalBudget.toLocaleString("en-IN")}`} label="Est. Budget" bg="bg-violet-50 text-violet-700" />
+          </div>
 
-          {/* Your Trips */}
-          <div className="mt-6">
+          <div className="mt-8">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-stone-800">Your trips</h2>
-              <span className="text-xs text-stone-500">{trips.length} {trips.length === 1 ? "trip" : "trips"}</span>
+              <span className="text-xs text-stone-500">{trips.length} {trips.length === 1 ? "trip" : "trips"} — click to open detailed view</span>
             </div>
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {trips.map((t) => <TripCard key={t.id} trip={t} />)}
             </div>
           </div>
 
-          {/* Itinerary Overview — destinations of featured trip */}
-          {featured && (
-            <div className="mt-8">
-              <h2 className="text-sm font-bold text-stone-800">Your Itinerary Overview</h2>
-              <p className="text-xs text-stone-500">Click a destination to view day-wise plan, stays, bookings & more.</p>
-              <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
-                {featured.groups.map((g) => (
-                  <DestinationCard key={g.base + g.startDate} base={g.base} emoji={g.emoji} cover={g.cover} startDate={g.startDate} endDate={g.endDate} nights={g.nights} onClick={() => window.location.assign(`/trip/${trips[0].id}`)} />
-                ))}
+          <div className="mt-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-stone-800">Discover — places you can visit</h2>
+                <p className="text-xs text-stone-500">50+ destinations — tap to create a new trip with the travel-planner skill.</p>
               </div>
-              <div className="mt-4">
-                <Link href={`/trip/${trips[0].id}`} className="inline-flex rounded-full bg-violet-600 px-5 py-2 text-xs font-semibold text-white hover:bg-violet-700">Open itinerary →</Link>
-              </div>
+              <input value={discoverQ} onChange={(e) => setDiscoverQ(e.target.value)} placeholder="Search country, city…" className="w-full rounded-full border border-stone-200 bg-white px-4 py-2 text-xs focus:border-violet-500 focus:outline-none sm:w-64" />
             </div>
-          )}
-
-          <div className="mt-8 flex gap-3">
-            <Link href={`/trip/${trips[0]?.id ?? ""}`} className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-medium text-stone-700 hover:bg-stone-50">View detailed mock (image) →</Link>
-            <span className="text-xs text-stone-400 self-center">Homepage now shows trip list only; detail on click as requested.</span>
+            <div className="mt-3 flex gap-2 overflow-auto pb-2">
+              {tags.map((t) => (
+                <button key={t} onClick={() => setTag(t)} className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${tag === t ? "bg-violet-600 text-white ring-violet-600" : "bg-white text-stone-600 ring-stone-200 hover:bg-stone-50"}`}>{t}</button>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {filtered.map((s) => (
+                <button
+                  key={s.country + s.city}
+                  onClick={() => {
+                    const name = `${s.city}, ${s.country}`;
+                    if (confirm(`Create a new trip for ${name}?`)) createTrip({ title: `${s.city} Trip`, country: s.country });
+                  }}
+                  className="group overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-sm hover:shadow-md"
+                >
+                  <div className="h-32 overflow-hidden bg-stone-100">
+                    <img
+                      src={s.cover}
+                      alt={s.city}
+                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                      loading="lazy"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
+                    />
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-stone-800">{s.emoji} {s.city}</div>
+                    <div className="text-xs text-stone-500">{s.country} · {s.tag}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-stone-400">{filtered.length} places shown — all images via picsum/unsplash with fallback.</p>
           </div>
         </div>
       </div>
