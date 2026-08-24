@@ -22,8 +22,11 @@ function Img({ src, alt, className }: { src: string; alt: string; className?: st
 
 export function TripCard({ trip }: { trip: Trip }) {
   const { days, dests, bookings, budget } = tripStats(trip);
+  // Use query param for any trip (works for static export without needing generateStaticParams for every id)
+  // Keep /trip/[id] for pre-generated known trips, but query works for all
+  const href = `/trip?id=${encodeURIComponent(trip.id)}`;
   return (
-    <Link href={`/trip/${trip.id}`} className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm hover:shadow-md">
+    <Link href={href} className="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm hover:shadow-md">
       <div className="h-36 overflow-hidden bg-stone-100">
         <Img src={trip.cover || getCover(trip.country)} alt={trip.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
       </div>
