@@ -20,10 +20,37 @@ export const COVERS: Record<string, string> = {
   Santorini: "https://picsum.photos/seed/santorini/600/400",
 };
 
+export const COORDS: Record<string, [number, number]> = {
+  Singapore: [1.3521, 103.8198],
+  Hanoi: [21.0285, 105.8542],
+  "Lan Ha Bay": [20.792, 107.073],
+  "Ninh Binh": [20.25, 105.97],
+  "Da Nang": [16.0544, 108.2022],
+  "Ba Na Hills": [15.999, 107.998],
+  "Hoi An": [15.88, 108.33],
+  HCMC: [10.8231, 106.6297],
+  "Ho Chi Minh City": [10.8231, 106.6297],
+  "Phu Quoc": [10.29, 103.984],
+  Home: [12.9716, 77.5946],
+  Greece: [37.98, 23.72],
+  Athens: [37.9838, 23.7275],
+  Santorini: [36.3932, 25.4615],
+  Mykonos: [37.4467, 25.3289],
+  Bangkok: [13.7563, 100.5018],
+  Phuket: [7.8804, 98.3923],
+  Bali: [-8.4095, 115.1889],
+  Tokyo: [35.6762, 139.6503],
+  Kyoto: [35.0116, 135.7681],
+};
+
 export function getCover(base: string): string {
   if (COVERS[base]) return COVERS[base];
   // picsum never 404s — deterministic per base
   return `https://picsum.photos/seed/${encodeURIComponent(base.toLowerCase().replace(/\s+/g, "-"))}/600/400`;
+}
+
+export function getCoords(base: string): [number, number] | null {
+  return COORDS[base] || null;
 }
 
 export function groupByDestination(trip: Trip): DestinationGroup[] {

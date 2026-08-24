@@ -6,6 +6,7 @@ import { groupByDestination, formatDayRange, tripStats, getCover } from "@/lib/d
 import { planToChips, dateLabel } from "@/lib/utils";
 import DayEditor from "@/components/DayEditor";
 import Sidebar from "@/components/Sidebar";
+import TripMap from "@/components/TripMap";
 
 const TABS = ["Itinerary", "Stay", "Notes", "Bookings", "Expenses", "Photos"] as const;
 
@@ -53,7 +54,7 @@ export default function TripDetailClient({ id }: { id: string }) {
               <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">₹{stats.budget.toLocaleString("en-IN")} est.</span>
             </div>
             <div className="relative mt-4 h-56 overflow-hidden rounded-2xl bg-stone-100">
-              <img src={cover} alt={activeDest || trip.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/fallback-${activeDest || "trip"}/600/400`; }} />
+              <img src={cover} alt={activeDest || trip.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80&auto=format&fit=crop"; }} />
               <button className="absolute bottom-3 right-3 rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-700 shadow ring-1 ring-stone-200">Change Cover</button>
             </div>
             <div className="mt-4 flex gap-6 border-b border-stone-200 text-xs font-medium">
@@ -157,10 +158,15 @@ export default function TripDetailClient({ id }: { id: string }) {
               <label className="flex gap-2 text-xs"><input type="checkbox" /> My Son Sanctuary</label>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="text-sm font-semibold text-stone-800">Trip Map</div>
-              <p className="text-xs text-stone-500">View your entire journey</p>
-              <div className="mt-3 h-56 rounded-xl bg-gradient-to-br from-sky-50 to-emerald-50 ring-1 ring-stone-200">
-                <div className="flex h-full items-center justify-center px-4 text-center text-xs text-stone-400">Vietnam route: Singapore → Hanoi → Lan Ha → … → Phu Quoc<br/>Flights · Road/Train · Ferry</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-stone-800">Trip Map</div>
+                  <p className="text-xs text-stone-500">OpenStreetMap · {groups.length} destinations</p>
+                </div>
+                <span className="rounded-full bg-white px-2 py-1 text-xs ring-1 ring-stone-200">View as List</span>
+              </div>
+              <div className="mt-3">
+                <TripMap groups={groups} activeBase={activeDest} />
               </div>
             </div>
             <div className="rounded-2xl border border-stone-200 bg-white p-4">
