@@ -67,4 +67,16 @@ export type Trip = {
   startDate: string;
   endDate: string;
   days: DayNode[];
+  budget?: number;
+  cover?: string;
+};
+
+export type DestinationGroup = {
+  base: string;
+  emoji: string;
+  days: DayNode[];
+  startDate: string;
+  endDate: string;
+  nights: number;
+  cover: string;
 };
