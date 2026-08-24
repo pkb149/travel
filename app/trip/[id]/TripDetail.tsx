@@ -101,6 +101,18 @@ export default function TripDetailClient({ id }: { id: string }) {
                         ))}
                         {chips.length === 0 && <p className="text-xs italic text-stone-400">No activities — edit to add.</p>}
                       </div>
+                      {day.photography && (
+                        <div className="mt-2 rounded-xl border border-amber-100 bg-amber-50/50 p-2.5">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">📸 Photography</div>
+                          <div className="mt-1 grid grid-cols-2 gap-1 text-xs leading-relaxed text-stone-600">
+                            <div><b>Allowed:</b> {day.photography.allowed}</div>
+                            <div><b>Tripod:</b> {day.photography.tripod}</div>
+                            <div><b>Drone:</b> {day.photography.drone}</div>
+                            <div><b>Commercial:</b> {day.photography.commercial}</div>
+                          </div>
+                          {day.photography.notes && <div className="mt-1 text-xs italic text-stone-500">{day.photography.notes}</div>}
+                        </div>
+                      )}
                       {(day.flights.length + day.hotels.length + day.cabs.length) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {day.flights.map((f) => <span key={f.id} className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 ring-1 ring-sky-100">✈ {f.from}→{f.to}</span>)}

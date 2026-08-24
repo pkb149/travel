@@ -46,6 +46,19 @@ export default function DayCard({ day, index, selected, onSelect, onAddAfter, on
         </div>
       ) : null}
 
+      {day.photography && (
+        <div className="mt-3 rounded-xl border border-stone-200 bg-stone-50 p-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-700">📸 Photography</div>
+          <div className="mt-1 space-y-1 text-xs leading-relaxed text-stone-600">
+            {day.photography.allowed && <div><b>Allowed:</b> {day.photography.allowed}</div>}
+            {day.photography.tripod && <div><b>Tripod:</b> {day.photography.tripod}</div>}
+            {day.photography.drone && <div><b>Drone:</b> {day.photography.drone}</div>}
+            {day.photography.commercial && <div><b>Commercial:</b> {day.photography.commercial}</div>}
+            {day.photography.notes && <div className="text-stone-500 italic">{day.photography.notes}</div>}
+          </div>
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-1.5">
         <button onClick={onSelect} className={`rounded-full px-3.5 py-1.5 text-xs font-semibold shadow-sm ${selected ? "bg-teal-600 text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>{selected ? "Editing…" : "Edit"}</button>
         <button onClick={onAddAfter} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">+ Day after</button>

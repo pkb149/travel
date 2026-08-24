@@ -1,15 +1,15 @@
 "use client";
 import { useState } from "react";
-import type { DayNode, Flight, Hotel, Cab, Attachment } from "@/lib/types";
+import type { DayNode, Flight, Hotel, Cab, Attachment, PhotographyRule } from "@/lib/types";
 import { useTravel } from "@/lib/store";
 import { uid, planToChips } from "@/lib/utils";
 
-function Section({ title, count, children, onAdd, addLabel }: { title: string; count: number; children: React.ReactNode; onAdd: () => void; addLabel: string }) {
+function Section({ title, count, children, onAdd, addLabel }: { title: string; count?: number; children: React.ReactNode; onAdd?: () => void; addLabel?: string }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-stone-50 p-3">
       <div className="mb-2 flex items-center justify-between">
-        <h4 className="text-xs font-semibold uppercase tracking-widest text-stone-500">{title} <span className="ml-1 rounded bg-white px-1.5 py-0.5 text-[11px] ring-1 ring-stone-200">{count}</span></h4>
-        <button onClick={onAdd} className="rounded-full bg-teal-600 px-3 py-1 text-xs font-medium text-white hover:bg-teal-700">+ {addLabel}</button>
+        <h4 className="text-xs font-semibold uppercase tracking-widest text-stone-500">{title} {count !== undefined && <span className="ml-1 rounded bg-white px-1.5 py-0.5 text-[11px] ring-1 ring-stone-200">{count}</span>}</h4>
+        {onAdd && <button onClick={onAdd} className="rounded-full bg-teal-600 px-3 py-1 text-xs font-medium text-white hover:bg-teal-700">+ {addLabel}</button>}
       </div>
       <div className="space-y-2">{children}</div>
     </div>
@@ -21,6 +21,8 @@ export default function DayEditor({ tripId, day }: { tripId: string; day: DayNod
   const [planDraft, setPlanDraft] = useState(day.plan);
   const chips = planToChips(day.plan);
   const savePlan = () => updateDay(tripId, day.id, { plan: planDraft });
+  const photo: PhotographyRule = day.photography || { allowed: "", tripod: "", drone: "", commercial: "", notes: "" };
+  const setPhoto = (patch: Partial<PhotographyRule>) => updateDay(tripId, day.id, { photography: { ...photo, ...patch } });
 
   return (
     <div className="space-y-4">
@@ -46,6 +48,29 @@ export default function DayEditor({ tripId, day }: { tripId: string; day: DayNod
         </div>
         <button onClick={savePlan} className="mt-2 rounded-lg bg-teal-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-teal-700">Save plan</button>
       </div>
+
+      <Section title="📸 Photography">
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-stone-600">Allowed
+            <input value={photo.allowed || ""} onChange={(e) => setPhoto({ allowed: e.target.value })} placeholder="Personal allowed everywhere..." className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs focus:border-teal-500 focus:outline-none" />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs font-medium text-stone-600">Tripod
+              <input value={photo.tripod || ""} onChange={(e) => setPhoto({ tripod: e.target.value })} placeholder="Tripod allowed? ban?" className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+            </label>
+            <label className="text-xs font-medium text-stone-600">Drone
+              <input value={photo.drone || ""} onChange={(e) => setPhoto({ drone: e.target.value })} placeholder="Drone policy" className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+            </label>
+          </div>
+          <label className="text-xs font-medium text-stone-600">Commercial
+            <input value={photo.commercial || ""} onChange={(e) => setPhoto({ commercial: e.target.value })} placeholder="Commercial needs permit?" className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+          </label>
+          <label className="text-xs font-medium text-stone-600">Notes
+            <input value={photo.notes || ""} onChange={(e) => setPhoto({ notes: e.target.value })} placeholder="Golden hour, light show times..." className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none" />
+          </label>
+        </div>
+      </Section>
+
       <Section title="Flights" count={day.flights.length} addLabel="Flight" onAdd={() => {
         const f: Flight = { id: uid("f"), from: "", to: "", airline: "", flightNo: "", time: "", pnr: "" };
         updateDay(tripId, day.id, { flights: [...day.flights, f] });

@@ -46,6 +46,14 @@ export type Attachment = {
   note?: string;
 };
 
+export type PhotographyRule = {
+  allowed: string;
+  tripod?: string;
+  drone?: string;
+  commercial?: string;
+  notes?: string;
+};
+
 export type DayNode = {
   id: string;
   date: string;
@@ -58,6 +66,7 @@ export type DayNode = {
   attachments: Attachment[];
   notes?: string;
   color?: string;
+  photography?: PhotographyRule;
 };
 
 export type Trip = {
