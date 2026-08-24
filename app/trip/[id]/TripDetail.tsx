@@ -66,7 +66,7 @@ export default function TripDetailClient({ id }: { id: string }) {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-[1.6fr_0.9fr]">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {groups.map((g) => (
                 <button key={g.base + g.startDate} onClick={() => setActiveDest(g.base)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${activeDest === g.base ? "bg-violet-600 text-white ring-violet-600" : "bg-white text-stone-600 ring-stone-200 hover:bg-stone-50"}`}>{g.emoji} {g.base} · {formatDayRange(g.startDate, g.endDate)}</button>
@@ -81,12 +81,13 @@ export default function TripDetailClient({ id }: { id: string }) {
                 {destDays.filter((d) => !query || d.plan.toLowerCase().includes(query.toLowerCase())).map((day) => {
                   const chips = planToChips(day.plan);
                   const idx = trip.days.indexOf(day);
+                  const isSelected = selected?.id === day.id;
                   return (
-                    <div key={day.id} className={`rounded-2xl border bg-white p-4 ${selected?.id === day.id ? "border-violet-600 ring-1 ring-violet-600" : "border-stone-200"}`}>
+                    <div key={day.id} className={`rounded-2xl border bg-white p-4 ${isSelected ? "border-violet-600 ring-1 ring-violet-600" : "border-stone-200"}`}>
                       <div className="flex items-center justify-between">
                         <div className="text-xs font-semibold text-stone-700">Day {idx + 1} – {dateLabel(day.date)} · {day.base} {day.emoji}</div>
                         <div className="flex gap-1">
-                          <button onClick={() => setSelectedDay(day.id)} className="rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600 hover:bg-stone-200">✎</button>
+                          <button onClick={() => setSelectedDay(day.id)} className={`rounded-full px-2.5 py-1 text-xs ${isSelected ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}>✎ Edit</button>
                           <button onClick={() => duplicateDay(trip.id, day.id)} className="rounded-full bg-stone-100 px-2 py-1 text-xs text-stone-600">⧉</button>
                           <button onClick={() => { if (confirm("Delete?")) removeDay(trip.id, day.id); }} className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-600">🗑</button>
                         </div>
@@ -123,15 +124,6 @@ export default function TripDetailClient({ id }: { id: string }) {
                     </div>
                   );
                 })}
-                {selected && (
-                  <div className="rounded-2xl border border-violet-200 bg-white p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="text-sm font-bold text-stone-800">Edit Day Plan — {selected.base} {selected.emoji}</div>
-                      <button onClick={() => setSelectedDay(null)} className="rounded-full bg-stone-100 px-3 py-1 text-xs">Close</button>
-                    </div>
-                    <DayEditor tripId={trip.id} day={selected} />
-                  </div>
-                )}
               </div>
             )}
             {tab !== "Itinerary" && (
@@ -143,70 +135,82 @@ export default function TripDetailClient({ id }: { id: string }) {
               </div>
             )}
           </div>
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="text-sm font-semibold text-stone-800">About {activeDest}</div>
-              <p className="mt-1 text-xs leading-relaxed text-stone-500">
-                {activeDest === "Hoi An" ? "A charming ancient town with lanterns, riverside cafes, tailoring, and beautiful beaches." :
-                 activeDest === "Singapore" ? "Glamour, gardens, Sentosa, shopping and Clarke Quay nightlife." :
-                 activeDest === "Hanoi" ? "Old Quarter base for street food, Train Street, coffee culture and Temple of Literature." :
-                 activeDest === "Phu Quoc" ? "Beach resort, island hopping, VinWonders, Grand World and Kiss Bridge fireworks." :
-                 `Explore ${activeDest} — ${destDays[0]?.plan.slice(0, 80) ?? ""}`}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="text-sm font-semibold text-stone-800">Quick Info</div>
-              <div className="mt-2 space-y-2 text-xs">
-                <div className="flex justify-between"><span className="text-stone-500">Weather</span><span className="font-medium text-stone-700">20°C – 25°C</span></div>
-                <div className="flex justify-between"><span className="text-stone-500">Currency</span><span className="font-medium">VND</span></div>
-                <div className="flex justify-between"><span className="text-stone-500">Language</span><span className="font-medium">Vietnamese</span></div>
-                <div className="flex justify-between"><span className="text-stone-500">Time Zone</span><span className="font-medium">GMT +7</span></div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="text-sm font-semibold text-stone-800">Checklist</div>
-              <label className="mt-2 flex gap-2 text-xs"><input type="checkbox" /> Tailor Appointments</label>
-              <label className="flex gap-2 text-xs"><input type="checkbox" defaultChecked /> Lantern Boat Ride</label>
-              <label className="flex gap-2 text-xs"><input type="checkbox" /> Spa Booking</label>
-              <label className="flex gap-2 text-xs"><input type="checkbox" /> My Son Sanctuary</label>
-            </div>
-            <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-stone-800">Trip Map</div>
-                  <p className="text-xs text-stone-500">OpenStreetMap · {groups.length} destinations</p>
+          <div className="space-y-4 lg:sticky lg:top-6 lg:h-[calc(100vh-24px)] lg:overflow-auto">
+            {selected ? (
+              <div className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-sm font-bold text-stone-800">Edit — {selected.base} {selected.emoji} · Day {trip.days.indexOf(selected) + 1}</div>
+                  <button onClick={() => setSelectedDay(null)} className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-200">Close</button>
                 </div>
-                <button onClick={() => setMapMode(mapMode === "map" ? "list" : "map")} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">
-                  {mapMode === "map" ? "View as List" : "View as Map"}
-                </button>
+                <DayEditor tripId={trip.id} day={selected} />
               </div>
-              <div className="mt-3">
-                {mapMode === "map" ? (
-                  <TripMap groups={groups} activeBase={activeDest} />
-                ) : (
-                  <div className="space-y-2">
-                    {groups.map((g, i) => (
-                      <div key={g.base + i} className={`flex items-center gap-3 rounded-xl border p-3 ${activeDest === g.base ? "border-violet-200 bg-violet-50" : "border-stone-200 bg-stone-50"}`}>
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">{i + 1}</span>
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-stone-800">{g.emoji} {g.base}</div>
-                          <div className="text-xs text-stone-500">{g.days.length} {g.days.length === 1 ? "night" : "nights"} · {g.startDate} → {g.endDate}</div>
-                        </div>
-                        <button onClick={() => setActiveDest(g.base)} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50">View</button>
-                      </div>
-                    ))}
+            ) : (
+              <>
+                <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-stone-800">About {activeDest}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-stone-500">
+                    {activeDest === "Hoi An" ? "A charming ancient town with lanterns, riverside cafes, tailoring, and beautiful beaches." :
+                     activeDest === "Singapore" ? "Glamour, gardens, Sentosa, shopping and Clarke Quay nightlife." :
+                     activeDest === "Hanoi" ? "Old Quarter base for street food, Train Street, coffee culture and Temple of Literature." :
+                     activeDest === "Phu Quoc" ? "Beach resort, island hopping, VinWonders, Grand World and Kiss Bridge fireworks." :
+                     `Explore ${activeDest} — ${destDays[0]?.plan.slice(0, 80) ?? ""}`}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-stone-800">Quick Info</div>
+                  <div className="mt-2 space-y-2 text-xs">
+                    <div className="flex justify-between"><span className="text-stone-500">Weather</span><span className="font-medium text-stone-700">20°C – 25°C</span></div>
+                    <div className="flex justify-between"><span className="text-stone-500">Currency</span><span className="font-medium">VND</span></div>
+                    <div className="flex justify-between"><span className="text-stone-500">Language</span><span className="font-medium">Vietnamese</span></div>
+                    <div className="flex justify-between"><span className="text-stone-500">Time Zone</span><span className="font-medium">GMT +7</span></div>
                   </div>
-                )}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-stone-200 bg-white p-4">
-              <div className="text-sm font-semibold text-stone-800">Budget Overview</div>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded-xl bg-violet-50 p-2"><div className="text-stone-500">Total</div><div className="font-bold">₹{tripStats(trip).budget.toLocaleString("en-IN")}</div></div>
-                <div className="rounded-xl bg-orange-50 p-2"><div className="text-stone-500">Spent</div><div className="font-bold">₹{(tripStats(trip).budget * 0.35).toLocaleString("en-IN")}</div></div>
-                <div className="rounded-xl bg-emerald-50 p-2"><div className="text-stone-500">Remaining</div><div className="font-bold text-emerald-700">₹{(tripStats(trip).budget * 0.65).toLocaleString("en-IN")}</div></div>
-              </div>
-            </div>
+                </div>
+                <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-stone-800">Checklist</div>
+                  <label className="mt-2 flex gap-2 text-xs"><input type="checkbox" /> Tailor Appointments</label>
+                  <label className="flex gap-2 text-xs"><input type="checkbox" defaultChecked /> Lantern Boat Ride</label>
+                  <label className="flex gap-2 text-xs"><input type="checkbox" /> Spa Booking</label>
+                  <label className="flex gap-2 text-xs"><input type="checkbox" /> My Son Sanctuary</label>
+                </div>
+                <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-stone-800">Trip Map</div>
+                      <p className="text-xs text-stone-500">OpenStreetMap · {groups.length} destinations</p>
+                    </div>
+                    <button onClick={() => setMapMode(mapMode === "map" ? "list" : "map")} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50">
+                      {mapMode === "map" ? "View as List" : "View as Map"}
+                    </button>
+                  </div>
+                  <div className="mt-3">
+                    {mapMode === "map" ? (
+                      <TripMap groups={groups} activeBase={activeDest} />
+                    ) : (
+                      <div className="space-y-2">
+                        {groups.map((g, i) => (
+                          <div key={g.base + i} className={`flex items-center gap-3 rounded-xl border p-3 ${activeDest === g.base ? "border-violet-200 bg-violet-50" : "border-stone-200 bg-stone-50"}`}>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">{i + 1}</span>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-stone-800">{g.emoji} {g.base}</div>
+                              <div className="text-xs text-stone-500">{g.days.length} {g.days.length === 1 ? "night" : "nights"} · {g.startDate} → {g.endDate}</div>
+                            </div>
+                            <button onClick={() => setActiveDest(g.base)} className="rounded-full bg-white px-3 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-200 hover:bg-violet-50">View</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                  <div className="text-sm font-semibold text-stone-800">Budget Overview</div>
+                  <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                    <div className="rounded-xl bg-violet-50 p-2"><div className="text-stone-500">Total</div><div className="font-bold">₹{tripStats(trip).budget.toLocaleString("en-IN")}</div></div>
+                    <div className="rounded-xl bg-orange-50 p-2"><div className="text-stone-500">Spent</div><div className="font-bold">₹{(tripStats(trip).budget * 0.35).toLocaleString("en-IN")}</div></div>
+                    <div className="rounded-xl bg-emerald-50 p-2"><div className="text-stone-500">Remaining</div><div className="font-bold text-emerald-700">₹{(tripStats(trip).budget * 0.65).toLocaleString("en-IN")}</div></div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

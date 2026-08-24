@@ -3,7 +3,7 @@ import { create } from "zustand";
 import type { Trip, DayNode } from "@/lib/types";
 import { vietnamTrip } from "@/data/vietnam";
 
-const KEY = "travel:trips:v2";
+const KEY = "travel:trips:v3";
 
 function uid(prefix = "id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
@@ -12,11 +12,49 @@ function uid(prefix = "id") {
 function loadTrips(): { trips: Trip[]; activeId: string | null } {
   if (typeof window === "undefined") return { trips: [vietnamTrip], activeId: vietnamTrip.id };
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { trips: [vietnamTrip], activeId: vietnamTrip.id };
-    const parsed = JSON.parse(raw) as { trips: Trip[]; activeId: string | null };
-    if (!parsed.trips?.length) return { trips: [vietnamTrip], activeId: vietnamTrip.id };
-    // migrate old single-trip key if present
+    // Check v3 first, then migrate from v2
+    let raw = localStorage.getItem(KEY);
+    let parsed: { trips: Trip[]; activeId: string | null } | null = null;
+    if (raw) {
+      parsed = JSON.parse(raw) as { trips: Trip[]; activeId: string | null };
+    } else {
+      // Try v2 migration
+      const oldRaw = localStorage.getItem("travel:trips:v2");
+      if (oldRaw) {
+        const old = JSON.parse(oldRaw) as { trips: Trip[]; activeId: string | null };
+        if (old.trips?.length) {
+          // Merge photography from fresh vietnamTrip for matching days
+          const freshMap = new Map(vietnamTrip.days.map((d) => [d.id, d.photography]));
+          const migrated = old.trips.map((t) => {
+            if (t.id === vietnamTrip.id) {
+              return {
+                ...t,
+                days: t.days.map((d) => ({
+                  ...d,
+                  photography: d.photography || freshMap.get(d.id) || undefined,
+                })),
+              };
+            }
+            return t;
+          });
+          parsed = { trips: migrated, activeId: old.activeId };
+          // Save as v3
+          localStorage.setItem(KEY, JSON.stringify(parsed));
+          return parsed;
+        }
+      }
+    }
+    if (!parsed || !parsed.trips?.length) return { trips: [vietnamTrip], activeId: vietnamTrip.id };
+    // Also ensure any trip without photography gets fresh data if it's vietnam
+    const freshMap = new Map(vietnamTrip.days.map((d) => [d.id, d.photography]));
+    const needsMigration = parsed.trips.some((t) => t.id === vietnamTrip.id && t.days.some((d) => !d.photography && freshMap.has(d.id)));
+    if (needsMigration) {
+      parsed.trips = parsed.trips.map((t) => {
+        if (t.id !== vietnamTrip.id) return t;
+        return { ...t, days: t.days.map((d) => ({ ...d, photography: d.photography || freshMap.get(d.id) })) };
+      });
+      localStorage.setItem(KEY, JSON.stringify(parsed));
+    }
     return parsed;
   } catch {
     return { trips: [vietnamTrip], activeId: vietnamTrip.id };
@@ -25,7 +63,6 @@ function loadTrips(): { trips: Trip[]; activeId: string | null } {
 
 function save(trips: Trip[], activeId: string | null) {
   localStorage.setItem(KEY, JSON.stringify({ trips, activeId }));
-  // keep legacy key in sync for backward compat
   const active = trips.find((t) => t.id === activeId);
   if (active) localStorage.setItem("travel:trip:vietnam-2026", JSON.stringify(active));
 }
@@ -185,6 +222,7 @@ export const useTravel = create<Store>((set) => {
       }),
     reset: () => {
       localStorage.removeItem(KEY);
+      localStorage.removeItem("travel:trips:v2");
       localStorage.removeItem("travel:trip:vietnam-2026");
       return { trips: [vietnamTrip], activeId: vietnamTrip.id, selectedDayId: null };
     },
