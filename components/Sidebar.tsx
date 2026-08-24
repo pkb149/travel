@@ -1,28 +1,39 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const NAV = [
   { icon: "◧", label: "Dashboard", href: "/", done: true },
   { icon: "✈", label: "Itinerary", href: "/trip/vietnam-2026", done: true },
   { icon: "◎", label: "Destinations", href: "/#discover", done: true },
-  { icon: "▭", label: "Bookings", href: "/trip/vietnam-2026", tab: "Bookings", done: false },
-  { icon: "₹", label: "Budget", href: "/trip/vietnam-2026", tab: "Expenses", done: false },
-  { icon: "🗺", label: "Map View", href: "/trip/vietnam-2026", tab: "Itinerary", anchor: "map", done: false },
-  { icon: "≡", label: "Notes", href: "/trip/vietnam-2026", tab: "Notes", done: false },
-  { icon: "📄", label: "Documents", href: "/trip/vietnam-2026", tab: "Photos", done: false },
+  { icon: "▭", label: "Bookings", href: "/", done: false },
+  { icon: "₹", label: "Budget", href: "/", done: false },
+  { icon: "🗺", label: "Map View", href: "/", done: false },
+  { icon: "≡", label: "Notes", href: "/", done: false },
+  { icon: "📄", label: "Documents", href: "/", done: false },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [toast, setToast] = useState<string | null>(null);
+  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+
+  useEffect(() => {
+    fetch("https://travel-api.prashantkumarbharadwaj.workers.dev/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.authenticated) setUser({ email: d.email, name: d.name });
+      })
+      .catch(() => {});
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
   };
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "Prashant";
 
   return (
     <aside className="hidden w-[220px] shrink-0 flex-col border-r border-stone-200 bg-white lg:flex">
@@ -53,15 +64,13 @@ export default function Sidebar() {
       </nav>
       {toast && <div className="mx-3 mb-2 rounded-lg bg-stone-800 px-3 py-2 text-xs text-white">{toast}</div>}
       <div className="border-t border-stone-100 p-3">
-        <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-3 ring-1 ring-amber-100">
-          <div className="text-xs font-semibold text-stone-800">Your Trip</div>
-          <div className="text-[11px] text-stone-500">23 Days</div>
-          <div className="mt-1 text-[11px] text-violet-600">27 Nov – 19 Dec 2025</div>
+        <div className="flex items-center gap-2 px-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-600 text-[10px] font-bold text-white">
+            {displayName.charAt(0).toUpperCase()}
+          </span>
+          <span className="text-xs font-medium text-stone-700" title={user?.email || ""}>{displayName}</span>
         </div>
-        <div className="mt-3 flex items-center gap-2 px-2">
-          <span className="h-6 w-6 rounded-full bg-stone-200" />
-          <span className="text-xs font-medium text-stone-700">Prashant & Partner</span>
-        </div>
+        {user?.email && <div className="mt-1 px-2 text-[11px] text-stone-400 truncate">{user.email}</div>}
       </div>
     </aside>
   );

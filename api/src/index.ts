@@ -88,17 +88,17 @@ app.get("/auth/callback", async (c) => {
 
   // Create JWT session
   const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
-  const payload = { email: info.email, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 };
+  const payload = { email: info.email, name: (info as any).name || info.email.split("@")[0], exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 };
   const jwt = await sign(payload, jwtSecret);
 
   setCookie(c, "session", jwt, {
     httpOnly: true,
     secure: true,
-    sameSite: "Lax",
+    sameSite: "None",
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
-  deleteCookie(c, "oauth_state");
+  deleteCookie(c, "oauth_state", { path: "/", secure: true, sameSite: "Lax" });
 
   const frontend = c.env.FRONTEND_URL || "https://travel-7l1.pages.dev";
   return c.redirect(`${frontend}?auth=success`, 302);
@@ -109,21 +109,21 @@ app.get("/auth/me", async (c) => {
   if (!token) return c.json({ authenticated: false }, 401);
   try {
     const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
-    const payload = await verify(token, jwtSecret) as { email: string };
+    const payload = await verify(token, jwtSecret) as { email: string; name?: string };
     if (payload.email !== ALLOWED_EMAIL) return c.json({ authenticated: false, error: "not whitelisted" }, 403);
-    return c.json({ authenticated: true, email: payload.email });
+    return c.json({ authenticated: true, email: payload.email, name: payload.name || payload.email.split("@")[0] });
   } catch {
     return c.json({ authenticated: false }, 401);
   }
 });
 
 app.post("/auth/logout", (c) => {
-  deleteCookie(c, "session");
+  deleteCookie(c, "session", { path: "/", secure: true, sameSite: "None" });
   return c.json({ ok: true });
 });
 
 app.get("/auth/logout", (c) => {
-  deleteCookie(c, "session");
+  deleteCookie(c, "session", { path: "/", secure: true, sameSite: "None" });
   const frontend = c.env.FRONTEND_URL || "https://travel-7l1.pages.dev";
   return c.redirect(frontend, 302);
 });
