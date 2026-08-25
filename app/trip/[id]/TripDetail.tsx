@@ -50,9 +50,12 @@ export default function TripDetailClient({ id }: { id: string }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h1 className="text-xl font-bold text-stone-800">{activeDest || trip.title}, {trip.country}</h1>
-                <p className="text-xs text-stone-500">{formatDayRange(trip.startDate, trip.endDate)} · {activeDest ? `${destDays.length} ${destDays.length === 1 ? "Night" : "Nights"}` : `${stats.days} Days`}</p>
+                <p className="text-xs text-stone-500">{formatDayRange(trip.startDate, trip.endDate)} · {activeDest ? `${destDays.length} ${destDays.length === 1 ? "Night" : "Nights"}` : `${stats.days} Days`}{stats.hasExpected ? ` · ₹${stats.totalExpected.toLocaleString("en-IN")} total` : ""}</p>
               </div>
-              <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">₹{stats.budget.toLocaleString("en-IN")} est.</span>
+              <div className="flex flex-wrap gap-2">
+                {stats.hasExpected && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">₹{stats.totalExpected.toLocaleString("en-IN")} total expected</span>}
+                <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">₹{stats.budget.toLocaleString("en-IN")} budget</span>
+              </div>
             </div>
             <div className="relative mt-4 h-56 overflow-hidden rounded-2xl bg-stone-100">
               <img src={cover} alt={activeDest || trip.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80&auto=format&fit=crop"; }} />
@@ -87,13 +90,26 @@ export default function TripDetailClient({ id }: { id: string }) {
                   return (
                     <div key={day.id} className={`rounded-2xl border bg-white p-4 ${isSelected ? "border-violet-600 ring-1 ring-violet-600" : "border-stone-200"}`}>
                       <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-stone-700">Day {idx + 1} – {dateLabel(day.date)} · {day.base} {day.emoji}</div>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-stone-700">
+                          <span>Day {idx + 1} – {dateLabel(day.date)} · {day.base} {day.emoji}</span>
+                          {day.expectedCost !== undefined && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200">₹{day.expectedCost.toLocaleString("en-IN")}</span>}
+                        </div>
                         <div className="flex gap-1">
                           <button onClick={() => setSelectedDay(isSelected ? null : day.id)} className={`rounded-full px-2.5 py-1 text-xs ${isSelected ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}>{isSelected ? "Done" : "✎ Edit"}</button>
                           <button onClick={() => duplicateDay(trip.id, day.id)} className="rounded-full bg-stone-100 px-2 py-1 text-xs text-stone-600">⧉</button>
                           <button onClick={() => { if (confirm("Delete?")) removeDay(trip.id, day.id); }} className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-600">🗑</button>
                         </div>
                       </div>
+                      {isSelected && (
+                        <div className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                          <label className="flex flex-1 items-center gap-2 text-xs font-medium text-stone-700">₹ Expected cost
+                            <input type="number" min="0" value={day.expectedCost ?? ""} onChange={(e) => {
+                              const v = e.target.value === "" ? undefined : Number(e.target.value);
+                              updateDay(trip.id, day.id, { expectedCost: v } as any);
+                            }} placeholder="0" className="w-32 rounded-lg border border-stone-300 bg-white px-2 py-1 text-xs focus:border-emerald-500 focus:outline-none" />
+                          </label>
+                        </div>
+                      )}
                       <div className="mt-2 space-y-2">
                         {activities.map((a, i) => (
                           <div key={i} className="flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
@@ -152,7 +168,47 @@ export default function TripDetailClient({ id }: { id: string }) {
                 })}
               </div>
             )}
-            {tab !== "Itinerary" && (
+            {tab === "Expenses" ? (
+              <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-stone-800">Expenses — {trip.title}</h3>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">Total ₹{stats.totalExpected.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="mt-3 overflow-hidden rounded-xl border border-stone-200">
+                  <table className="w-full text-xs">
+                    <thead className="bg-stone-50 text-left text-[11px] uppercase tracking-widest text-stone-500">
+                      <tr><th className="px-3 py-2">Day</th><th className="px-3 py-2">Date</th><th className="px-3 py-2">Place</th><th className="px-3 py-2 text-right">Expected ₹</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {trip.days.map((d, i) => (
+                        <tr key={d.id} className="hover:bg-stone-50">
+                          <td className="px-3 py-2 font-medium">{i + 1}</td>
+                          <td className="px-3 py-2 text-stone-600">{dateLabel(d.date) || "—"}</td>
+                          <td className="px-3 py-2">{d.base} {d.emoji}</td>
+                          <td className="px-3 py-2 text-right">
+                            <input type="number" min="0" value={d.expectedCost ?? ""} onChange={(e) => {
+                              const v = e.target.value === "" ? undefined : Number(e.target.value);
+                              updateDay(trip.id, d.id, { expectedCost: v } as any);
+                            }} placeholder="0" className="w-24 rounded-lg border border-stone-300 bg-white px-2 py-1 text-right text-xs focus:border-violet-500 focus:outline-none" />
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-emerald-50 font-bold">
+                        <td colSpan={3} className="px-3 py-2 text-right">Total</td>
+                        <td className="px-3 py-2 text-right text-emerald-700">₹{stats.totalExpected.toLocaleString("en-IN")}</td>
+                      </tr>
+                      {stats.hasExpected && stats.budget !== stats.totalExpected && (
+                        <tr className="bg-stone-50 text-stone-500">
+                          <td colSpan={3} className="px-3 py-2 text-right">Budget vs expected</td>
+                          <td className={`px-3 py-2 text-right font-medium ${stats.totalExpected > stats.budget ? "text-red-600" : "text-emerald-600"}`}>{stats.totalExpected > stats.budget ? "+" : ""}₹{(stats.totalExpected - stats.budget).toLocaleString("en-IN")}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-xs text-stone-400">Edit any day cost inline — total updates live. Also editable in Itinerary → Edit or per-day picker below.</p>
+              </div>
+            ) : tab !== "Itinerary" && (
               <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center">
                 <div className="text-sm font-semibold text-stone-700">{tab}</div>
                 <p className="mt-1 text-xs text-stone-500">Content for {tab} lives here — stays, notes, bookings, expenses, photos per destination. Wire to D1/R2.</p>
@@ -230,10 +286,11 @@ export default function TripDetailClient({ id }: { id: string }) {
                 <div className="rounded-2xl border border-stone-200 bg-white p-4">
                   <div className="text-sm font-semibold text-stone-800">Budget Overview</div>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                    <div className="rounded-xl bg-violet-50 p-2"><div className="text-stone-500">Total</div><div className="font-bold">₹{tripStats(trip).budget.toLocaleString("en-IN")}</div></div>
-                    <div className="rounded-xl bg-orange-50 p-2"><div className="text-stone-500">Spent</div><div className="font-bold">₹{(tripStats(trip).budget * 0.35).toLocaleString("en-IN")}</div></div>
-                    <div className="rounded-xl bg-emerald-50 p-2"><div className="text-stone-500">Remaining</div><div className="font-bold text-emerald-700">₹{(tripStats(trip).budget * 0.65).toLocaleString("en-IN")}</div></div>
+                    <div className="rounded-xl bg-violet-50 p-2"><div className="text-stone-500">Budget</div><div className="font-bold">₹{stats.budget.toLocaleString("en-IN")}</div></div>
+                    <div className="rounded-xl bg-emerald-50 p-2"><div className="text-stone-500">Expected</div><div className="font-bold text-emerald-700">₹{stats.totalExpected.toLocaleString("en-IN")}</div></div>
+                    <div className={`rounded-xl p-2 ${stats.hasExpected && stats.totalExpected > stats.budget ? "bg-red-50" : "bg-stone-50"}`}><div className="text-stone-500">Remaining</div><div className={`font-bold ${stats.hasExpected && stats.totalExpected > stats.budget ? "text-red-600" : "text-emerald-700"}`}>₹{(stats.budget - stats.totalExpected).toLocaleString("en-IN")}</div></div>
                   </div>
+                  {stats.hasExpected && <p className="mt-2 text-xs text-stone-400">{stats.days} days · avg ₹{stats.days ? Math.round(stats.totalExpected / stats.days).toLocaleString("en-IN") : 0}/day</p>}
                 </div>
               </>
             )}

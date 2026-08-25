@@ -73,6 +73,7 @@ export type DayNode = {
   color?: string;
   photography?: PhotographyRule;
   activities?: Activity[];
+  expectedCost?: number;
 };
 
 export type Trip = {

@@ -55,6 +55,12 @@ export default function DayEditor({ tripId, day }: { tripId: string; day: DayNod
         <label className="text-xs font-medium text-stone-600">Notes
           <input value={day.notes ?? ""} onChange={(e) => updateDay(tripId, day.id, { notes: e.target.value })} className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none" placeholder="optional" />
         </label>
+        <label className="text-xs font-medium text-stone-600">Expected cost (₹)
+          <input type="number" min="0" value={day.expectedCost ?? ""} onChange={(e) => {
+            const v = e.target.value === "" ? undefined : Number(e.target.value);
+            updateDay(tripId, day.id, { expectedCost: v } as any);
+          }} placeholder="e.g. 12000" className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:border-teal-500 focus:outline-none" />
+        </label>
       </div>
 
       <Section title="⏰ Activities (time + title) — accurate time, arrow still separates but time is editable" count={activities.length} onAdd={addActivity} addLabel="Activity">

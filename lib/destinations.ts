@@ -76,7 +76,9 @@ export function tripStats(trip: Trip) {
   const days = trip.days.length;
   const dests = groups.length;
   const budget = trip.budget ?? 400000;
-  return { days, dests, bookings, budget, groups };
+  const totalExpected = trip.days.reduce((n, d) => n + (d.expectedCost ?? 0), 0);
+  const hasExpected = trip.days.some((d) => d.expectedCost !== undefined && d.expectedCost !== null);
+  return { days, dests, bookings, budget, totalExpected, hasExpected, groups };
 }
 
 export function formatDayRange(start: string, end: string) {
