@@ -19,23 +19,32 @@ function getAuthHeaders(): Record<string, string> {
 async function syncTripToApi(trip: Trip) {
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeaders() };
-    const secret = typeof window !== "undefined" ? localStorage.getItem("travel_token") : null;
-    // Also try X-API-Secret if available (for service-to-service, but user token is enough for write)
-    await fetch(`${API}/api/trips`, {
+    const res = await fetch(`${API}/api/trips`, {
       method: "POST",
       headers,
+      credentials: "include",
       body: JSON.stringify(trip),
     });
-  } catch {}
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      console.warn("syncTripToApi failed", res.status, txt.slice(0, 200));
+    }
+  } catch (e) {
+    console.warn("syncTripToApi error", e);
+  }
 }
 
 async function deleteTripFromApi(id: string) {
   try {
-    await fetch(`${API}/api/trips/${id}`, {
+    const res = await fetch(`${API}/api/trips/${id}`, {
       method: "DELETE",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
-  } catch {}
+    if (!res.ok) console.warn("deleteTripFromApi failed", res.status);
+  } catch (e) {
+    console.warn("deleteTripFromApi error", e);
+  }
 }
 
 function loadTrips(): { trips: Trip[]; activeId: string | null } {
@@ -266,29 +275,37 @@ export const useTravel = create<Store>((set, get) => {
     loadFromApi: async () => {
       try {
         const headers: Record<string, string> = { ...getAuthHeaders() };
-        const res = await fetch(`${API}/api/trips`, { headers });
+        const res = await fetch(`${API}/api/trips`, { headers, credentials: "include" });
         if (!res.ok) return;
         const apiTrips = await res.json() as Trip[];
         if (!Array.isArray(apiTrips) || apiTrips.length === 0) {
-          // Seed D1 with local trips if empty
           const { trips } = get();
           for (const t of trips) await syncTripToApi(t);
           return;
         }
-        // Merge: API is source of truth, but keep local trips not in API
         const { trips: localTrips, activeId } = get();
-        const apiIds = new Set(apiTrips.map((t) => t.id));
-        const merged = [...apiTrips];
+        const apiById = new Map(apiTrips.map((t) => [t.id, t]));
+        const localById = new Map(localTrips.map((t) => [t.id, t]));
+        // Merge: for ids in both, keep local if it differs (prevents refresh clobbering unsynced edits)
+        const merged: Trip[] = apiTrips.map((apiTrip) => {
+          const local = localById.get(apiTrip.id);
+          if (!local) return apiTrip;
+          if (JSON.stringify(local) === JSON.stringify(apiTrip)) return apiTrip;
+          // Local differs — treat local as source of truth, push to API
+          syncTripToApi(local);
+          return local;
+        });
         for (const lt of localTrips) {
-          if (!apiIds.has(lt.id)) {
+          if (!apiById.has(lt.id)) {
             merged.push(lt);
             await syncTripToApi(lt);
           }
         }
-        // If API has vietnam with old data without photography, ensure we use fresh
-        save(merged, activeId && apiIds.has(activeId) ? activeId : merged[0]?.id ?? null);
-        set({ trips: merged, activeId: activeId && apiIds.has(activeId) ? activeId : merged[0]?.id ?? null });
-      } catch {}
+        save(merged, activeId && (apiById.has(activeId) || localById.has(activeId)) ? activeId : merged[0]?.id ?? null);
+        set({ trips: merged, activeId: activeId && (apiById.has(activeId) || localById.has(activeId)) ? activeId : merged[0]?.id ?? null });
+      } catch (e) {
+        console.warn("loadFromApi error", e);
+      }
     },
     reset: () => {
       localStorage.removeItem(KEY);
