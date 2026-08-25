@@ -4,26 +4,52 @@ import type { Trip, DayNode } from "@/lib/types";
 import { vietnamTrip } from "@/data/vietnam";
 
 const KEY = "travel:trips:v3";
+const API = "https://travel-api.prashantkumarbharadwaj.workers.dev";
 
 function uid(prefix = "id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}_${Date.now().toString(36)}`;
 }
 
+function getAuthHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("travel_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function syncTripToApi(trip: Trip) {
+  try {
+    const headers: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeaders() };
+    const secret = typeof window !== "undefined" ? localStorage.getItem("travel_token") : null;
+    // Also try X-API-Secret if available (for service-to-service, but user token is enough for write)
+    await fetch(`${API}/api/trips`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(trip),
+    });
+  } catch {}
+}
+
+async function deleteTripFromApi(id: string) {
+  try {
+    await fetch(`${API}/api/trips/${id}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+  } catch {}
+}
+
 function loadTrips(): { trips: Trip[]; activeId: string | null } {
   if (typeof window === "undefined") return { trips: [vietnamTrip], activeId: vietnamTrip.id };
   try {
-    // Check v3 first, then migrate from v2
     let raw = localStorage.getItem(KEY);
     let parsed: { trips: Trip[]; activeId: string | null } | null = null;
     if (raw) {
       parsed = JSON.parse(raw) as { trips: Trip[]; activeId: string | null };
     } else {
-      // Try v2 migration
       const oldRaw = localStorage.getItem("travel:trips:v2");
       if (oldRaw) {
         const old = JSON.parse(oldRaw) as { trips: Trip[]; activeId: string | null };
         if (old.trips?.length) {
-          // Merge photography from fresh vietnamTrip for matching days
           const freshMap = new Map(vietnamTrip.days.map((d) => [d.id, d.photography]));
           const migrated = old.trips.map((t) => {
             if (t.id === vietnamTrip.id) {
@@ -38,14 +64,12 @@ function loadTrips(): { trips: Trip[]; activeId: string | null } {
             return t;
           });
           parsed = { trips: migrated, activeId: old.activeId };
-          // Save as v3
           localStorage.setItem(KEY, JSON.stringify(parsed));
           return parsed;
         }
       }
     }
     if (!parsed || !parsed.trips?.length) return { trips: [vietnamTrip], activeId: vietnamTrip.id };
-    // Also ensure any trip without photography gets fresh data if it's vietnam
     const freshMap = new Map(vietnamTrip.days.map((d) => [d.id, d.photography]));
     const needsMigration = parsed.trips.some((t) => t.id === vietnamTrip.id && t.days.some((d) => !d.photography && freshMap.has(d.id)));
     if (needsMigration) {
@@ -82,11 +106,16 @@ type Store = {
   removeDay: (tripId: string, dayId: string) => void;
   duplicateDay: (tripId: string, dayId: string) => void;
   importTrips: (trips: Trip[]) => void;
+  loadFromApi: () => Promise<void>;
   reset: () => void;
 };
 
-export const useTravel = create<Store>((set) => {
+export const useTravel = create<Store>((set, get) => {
   const init = loadTrips();
+  // Fire-and-forget API sync on init: if API has trips, merge; also ensure vietnam is in D1
+  if (typeof window !== "undefined") {
+    setTimeout(() => get().loadFromApi(), 500);
+  }
   return {
     trips: init.trips,
     activeId: init.activeId,
@@ -124,6 +153,7 @@ export const useTravel = create<Store>((set) => {
         const trips = [...s.trips, trip];
         save(trips, id);
         newId = id;
+        syncTripToApi(trip);
         return { trips, activeId: id, selectedDayId: trip.days[0].id };
       });
       return newId;
@@ -148,6 +178,7 @@ export const useTravel = create<Store>((set) => {
         };
         const trips = [...s.trips, copy];
         save(trips, nid);
+        syncTripToApi(copy);
         return { trips, activeId: nid };
       }),
     deleteTrip: (id) =>
@@ -155,12 +186,15 @@ export const useTravel = create<Store>((set) => {
         const trips = s.trips.filter((t) => t.id !== id);
         const activeId = s.activeId === id ? (trips[0]?.id ?? null) : s.activeId;
         save(trips, activeId);
+        deleteTripFromApi(id);
         return { trips, activeId, selectedDayId: null };
       }),
     renameTrip: (id, patch) =>
       set((s) => {
         const trips = s.trips.map((t) => (t.id === id ? { ...t, ...patch } : t));
         save(trips, s.activeId);
+        const updated = trips.find((t) => t.id === id);
+        if (updated) syncTripToApi(updated);
         return { trips };
       }),
     updateDay: (tripId, dayId, patch) =>
@@ -169,6 +203,8 @@ export const useTravel = create<Store>((set) => {
           t.id === tripId ? { ...t, days: t.days.map((d) => (d.id === dayId ? { ...d, ...patch } : d)) } : t
         );
         save(trips, s.activeId);
+        const updated = trips.find((t) => t.id === tripId);
+        if (updated) syncTripToApi(updated);
         return { trips };
       }),
     addDay: (tripId, afterId) =>
@@ -183,12 +219,16 @@ export const useTravel = create<Store>((set) => {
           return { ...t, days };
         });
         save(trips, s.activeId);
+        const updated = trips.find((t) => t.id === tripId);
+        if (updated) syncTripToApi(updated);
         return { trips, selectedDayId: nid };
       }),
     removeDay: (tripId, dayId) =>
       set((s) => {
         const trips = s.trips.map((t) => (t.id === tripId ? { ...t, days: t.days.filter((d) => d.id !== dayId) } : t));
         save(trips, s.activeId);
+        const updated = trips.find((t) => t.id === tripId);
+        if (updated) syncTripToApi(updated);
         return { trips, selectedDayId: null };
       }),
     duplicateDay: (tripId, dayId) =>
@@ -212,14 +252,44 @@ export const useTravel = create<Store>((set) => {
           return { ...t, days };
         });
         save(trips, s.activeId);
+        const updated = trips.find((t) => t.id === tripId);
+        if (updated) syncTripToApi(updated);
         return { trips };
       }),
     importTrips: (trips) =>
       set(() => {
         const activeId = trips[0]?.id ?? null;
         save(trips, activeId);
+        trips.forEach((t) => syncTripToApi(t));
         return { trips, activeId, selectedDayId: null };
       }),
+    loadFromApi: async () => {
+      try {
+        const headers: Record<string, string> = { ...getAuthHeaders() };
+        const res = await fetch(`${API}/api/trips`, { headers });
+        if (!res.ok) return;
+        const apiTrips = await res.json() as Trip[];
+        if (!Array.isArray(apiTrips) || apiTrips.length === 0) {
+          // Seed D1 with local trips if empty
+          const { trips } = get();
+          for (const t of trips) await syncTripToApi(t);
+          return;
+        }
+        // Merge: API is source of truth, but keep local trips not in API
+        const { trips: localTrips, activeId } = get();
+        const apiIds = new Set(apiTrips.map((t) => t.id));
+        const merged = [...apiTrips];
+        for (const lt of localTrips) {
+          if (!apiIds.has(lt.id)) {
+            merged.push(lt);
+            await syncTripToApi(lt);
+          }
+        }
+        // If API has vietnam with old data without photography, ensure we use fresh
+        save(merged, activeId && apiIds.has(activeId) ? activeId : merged[0]?.id ?? null);
+        set({ trips: merged, activeId: activeId && apiIds.has(activeId) ? activeId : merged[0]?.id ?? null });
+      } catch {}
+    },
     reset: () => {
       localStorage.removeItem(KEY);
       localStorage.removeItem("travel:trips:v2");

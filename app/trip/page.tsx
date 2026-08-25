@@ -3,16 +3,17 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import TripDetailClient from "./[id]/TripDetail";
 
-function TripQueryInner() {
-  const params = useSearchParams();
-  const id = params.get("id") || "vietnam-2026";
+function TripByQuery() {
+  const sp = useSearchParams();
+  const id = sp.get("id") || "";
+  if (!id) return <div className="p-8 text-sm text-stone-500">No trip id — <a href="/itinerary" className="text-violet-600 underline">view all itineraries</a></div>;
   return <TripDetailClient id={id} />;
 }
 
-export default function TripPage() {
+export default function TripQueryPage() {
   return (
     <Suspense fallback={<div className="p-8 text-sm text-stone-500">Loading…</div>}>
-      <TripQueryInner />
+      <TripByQuery />
     </Suspense>
   );
 }

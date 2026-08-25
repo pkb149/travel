@@ -84,9 +84,8 @@ app.get("/auth/callback", async (c) => {
 
   const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
   const payload = { email: info.email, name: (info as any).name || info.email.split("@")[0], exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 };
-  const jwt = await sign(payload, jwtSecret);
+  const jwt = await sign(payload, jwtSecret, "HS256");
 
-  // Set cookie for same-site and also pass token via URL for cross-site (pages.dev vs workers.dev are cross-site, SameSite=None still blocked as third-party in modern browsers)
   setCookie(c, "session", jwt, {
     httpOnly: true,
     secure: true,
@@ -97,7 +96,6 @@ app.get("/auth/callback", async (c) => {
   deleteCookie(c, "oauth_state", { path: "/", secure: true, sameSite: "Lax" });
 
   const frontend = c.env.FRONTEND_URL || "https://travel-7l1.pages.dev";
-  // Pass token in URL so frontend can store in localStorage (cross-site cookie is third-party and blocked)
   return c.redirect(`${frontend}?token=${encodeURIComponent(jwt)}&auth=success`, 302);
 });
 
@@ -110,7 +108,7 @@ app.get("/auth/me", async (c) => {
   if (!token) return c.json({ authenticated: false }, 401);
   try {
     const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
-    const payload = await verify(token, jwtSecret) as { email: string; name?: string };
+    const payload = await verify(token, jwtSecret, "HS256") as { email: string; name?: string };
     if (payload.email !== ALLOWED_EMAIL) return c.json({ authenticated: false, error: "not whitelisted" }, 403);
     return c.json({ authenticated: true, email: payload.email, name: payload.name || payload.email.split("@")[0] });
   } catch {
@@ -137,7 +135,7 @@ app.use("/api/*", async (c, next) => {
   if (token) {
     try {
       const jwtSecret = c.env.JWT_SECRET || "dev-secret-change-me";
-      const payload = await verify(token, jwtSecret) as { email: string };
+      const payload = await verify(token, jwtSecret, "HS256") as { email: string };
       if (payload.email === ALLOWED_EMAIL) return next();
     } catch {}
   }
@@ -148,13 +146,17 @@ app.use("/api/*", async (c, next) => {
 
 app.get("/api/health", (c) => c.json({ ok: true, service: "travel-api", auth: "google-whitelist", whitelisted: ALLOWED_EMAIL }));
 app.get("/api/trips", async (c) => {
-  const { results } = await c.env.DB.prepare("SELECT * FROM trips").all();
-  return c.json(results);
+  const { results } = await c.env.DB.prepare("SELECT data FROM trips").all<{ data: string }>();
+  const trips = results.map((r) => {
+    try { return JSON.parse(r.data); } catch { return null; }
+  }).filter(Boolean);
+  return c.json(trips);
 });
 app.get("/api/trips/:id", async (c) => {
   const id = c.req.param("id");
-  const row = await c.env.DB.prepare("SELECT * FROM trips WHERE id = ?").bind(id).first();
-  return c.json(row ?? { id, error: "not found" });
+  const row = await c.env.DB.prepare("SELECT data FROM trips WHERE id = ?").bind(id).first<{ data: string }>();
+  if (!row) return c.json({ error: "not found", id }, 404);
+  try { return c.json(JSON.parse(row.data)); } catch { return c.json(row); }
 });
 app.post("/api/trips", async (c) => {
   const trip = await c.req.json();
@@ -162,6 +164,18 @@ app.post("/api/trips", async (c) => {
   const dataStr = JSON.stringify(trip);
   await c.env.DB.prepare("INSERT OR REPLACE INTO trips (id, title, country, start_date, end_date, data) VALUES (?, ?, ?, ?, ?, ?)").bind(trip.id, trip.title, trip.country, trip.startDate, trip.endDate, dataStr).run();
   return c.json({ ok: true, id: trip.id });
+});
+app.put("/api/trips/:id", async (c) => {
+  const id = c.req.param("id");
+  const trip = await c.req.json();
+  const dataStr = JSON.stringify({ ...trip, id });
+  await c.env.DB.prepare("INSERT OR REPLACE INTO trips (id, title, country, start_date, end_date, data) VALUES (?, ?, ?, ?, ?, ?)").bind(id, trip.title, trip.country, trip.startDate, trip.endDate, dataStr).run();
+  return c.json({ ok: true, id });
+});
+app.delete("/api/trips/:id", async (c) => {
+  const id = c.req.param("id");
+  await c.env.DB.prepare("DELETE FROM trips WHERE id = ?").bind(id).run();
+  return c.json({ ok: true, id });
 });
 
 export default app;

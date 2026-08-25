@@ -1,10 +1,27 @@
 {
-	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "travel",
-	"compatibility_date": "2026-08-24",
-	"compatibility_flags": ["nodejs_compat"],
-	"pages_build_output_dir": "out",
-	"d1_databases": [{ "binding": "DB", "database_name": "travel-db", "database_id": "01eec730-0aed-432a-8d8d-26f6e348652c", "migrations_dir": "migrations" }],
-	"r2_buckets": [{ "binding": "ATTACHMENTS", "bucket_name": "travel-attachments" }],
-	"vars": { "NEXTJS_ENV": "production", "API_URL": "https://travel-api.prashantkumarbharadwaj.workers.dev" }
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "travel",
+  "compatibility_date": "2025-06-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "pages_build_output_dir": "out",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "travel-db",
+      "database_id": "01eec730-0aed-432a-8d8d-26f6e348652c",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "travel-attachments"
+    }
+  ],
+  "vars": {
+    "NEXTJS_ENV": "production",
+    "API_URL": "https://travel-api.prashantkumarbharadwaj.workers.dev"
+  }
 }
